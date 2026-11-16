@@ -1,0 +1,67 @@
+/* Farbwelt aus Tresen v0.3. Dunkel ist die Grundeinstellung; hell folgt dem System
+   oder der Auswahl im Profil (data-theme am <html>-Element). */
+:root {
+  --bg: #0f0d16;
+  --bg-2: #17141f;
+  --card: #1d1928;
+  --card-2: #252034;
+  --line: #2f2940;
+  --text: #f4f1fa;
+  --muted: #a39cb8;
+  --dim: #6b6880;
+  --accent: #ff4fa3;
+  --accent-2: #8b5cf6;
+  --grad: linear-gradient(135deg, #ff4fa3 0%, #8b5cf6 100%);
+  --good: #4ade80;
+  --warn: #facc15;
+  --bad: #ef4444;
+  --gold: #f5b301;
+  --radius: 18px;
+  --tabbar-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --map-filter: brightness(0.7) invert(1) contrast(1.1) hue-rotate(200deg) saturate(0.5) brightness(0.8);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #f6f4fb;
+    --bg-2: #efecf7;
+    --card: #ffffff;
+    --card-2: #f3f0fa;
+    --line: #e1dcee;
+    --text: #17141f;
+    --muted: #625b78;
+    --dim: #9a94ad;
+    --accent: #e6338a;
+    --accent-2: #7c3aed;
+    --grad: linear-gradient(135deg, #f0409a 0%, #7c3aed 100%);
+    --good: #16a34a;
+    --warn: #ca8a04;
+    --bad: #dc2626;
+    --gold: #d99a00;
+    --map-filter: none;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #f6f4fb;
+  --bg-2: #efecf7;
+  --card: #ffffff;
+  --card-2: #f3f0fa;
+  --line: #e1dcee;
+  --text: #17141f;
+  --muted: #625b78;
+  --dim: #9a94ad;
+  --accent: #e6338a;
+  --accent-2: #7c3aed;
+  --grad: linear-gradient(135deg, #f0409a 0%, #7c3aed 100%);
+  --good: #16a34a;
+  --warn: #ca8a04;
+  --bad: #dc2626;
+  --gold: #d99a00;
+  --map-filter: none;
+  color-scheme: light;
+}
