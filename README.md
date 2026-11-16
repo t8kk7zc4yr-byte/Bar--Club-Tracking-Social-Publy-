@@ -6,7 +6,7 @@ Der Name ist vorläufig. Er steht in `src/config/app.ts`, `vite.config.ts` (`APP
 
 ## Stand
 
-Phase 0 (Einrichtung) ist angelegt, aber noch **nicht gebaut oder getestet**, weil auf dem Entwicklungsrechner Node.js und Git fehlten. Die Paketversionen in `package.json` stammen aus v0.3; `vitest` wird nach der Node-Installation ergänzt.
+Phase 0 (Einrichtung) ist abgeschlossen: `npm run build` läuft fehlerfrei, das Gerüst wird im Browser angezeigt, das Supabase-Projekt ist erreichbar.
 
 | Bereich | Stand |
 |:---|:---|
