@@ -23,7 +23,7 @@
   --tabbar-h: 64px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
-  --map-filter: brightness(0.7) invert(1) contrast(1.1) hue-rotate(200deg) saturate(0.5) brightness(0.8);
+  --map-filter: brightness(0.75) invert(1) contrast(0.9) hue-rotate(200deg) saturate(0.35) brightness(0.9);
   color-scheme: dark;
 }
 

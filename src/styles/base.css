@@ -201,7 +201,7 @@ textarea.input { min-height: 80px; resize: vertical; }
 .mini-map { height: 220px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); }
 .mini-map .leaflet-container { height: 100%; }
 /* dunkle Karte */
-.dark-tiles { filter: brightness(0.75) invert(1) contrast(0.9) hue-rotate(200deg) saturate(0.35) brightness(0.9); }
+.dark-tiles { filter: var(--map-filter); }
 
 /* ---------- Detail ---------- */
 .cover { height: 210px; margin: calc(-14px - var(--safe-t)) -16px 0; position: relative; background: var(--grad); overflow: hidden; }
@@ -301,3 +301,11 @@ textarea.input { min-height: 80px; resize: vertical; }
 .legal-body h2 { font-size: 16px; margin: 18px 0 6px; }
 .legal-body p, .legal-body li { color: var(--muted); font-size: 14px; line-height: 1.55; }
 .code-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; letter-spacing: 0.08em; font-weight: 700; }
+.tag-group + .tag-group { margin-top: 12px; }
+.tag-group > .gl { font-size: 11.5px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.sync-note { font-size: 12.5px; color: var(--warn); }
+details.fold > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: '▾'; color: var(--dim); }
+details.fold[open] > summary::after { content: '▴'; }
+details.fold[open] > summary { margin-bottom: 12px; }

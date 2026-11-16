@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { APP } from '../../config/app';
 import { Header, RatingLegend, Toggle } from '../../components/ui';
 import { authMessage, signOut, updateProfile, useSession } from '../../data/session';
+import { useStore } from '../../data/store';
 import { getTheme, setTheme } from '../../data/theme';
 import { toast } from '../../lib/notify';
 import type { ThemeMode } from '../../lib/types';
@@ -18,6 +19,7 @@ export default function Profile() {
   const email = useSession((s) => s.user?.email ?? '');
   const [name, setName] = useState(profile?.displayName ?? '');
   const [theme, setThemeState] = useState<ThemeMode>(getTheme());
+  const pending = useStore((s) => s.pending);
 
   if (!profile) return null;
 
@@ -113,7 +115,7 @@ export default function Profile() {
 
       <div className="section">
         <div className="card" style={{ display: 'grid', gap: 8 }}>
-          <button className="btn" onClick={() => signOut()}>Abmelden</button>
+          <button className="btn" onClick={() => { if (pending === 0 || confirm('Es gibt noch nicht übertragene Änderungen. Beim Abmelden gehen sie verloren. Trotzdem abmelden?')) signOut(); }}>Abmelden</button>
           <div className="small muted">Datenexport und Kontolöschung folgen in einer späteren Version.</div>
         </div>
       </div>

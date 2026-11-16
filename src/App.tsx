@@ -4,17 +4,33 @@ import TabBar from './components/TabBar';
 import { Toasts } from './components/ui';
 import { APP } from './config/app';
 import { useSession } from './data/session';
+import { initStore, resetStore, useStore } from './data/store';
+import { startSync, sync } from './data/sync';
 import { isConfigured } from './data/supabase';
 import AuthPage from './features/auth/AuthPage';
 import NewPassword from './features/auth/NewPassword';
 import Legal from './features/legal/Legal';
 import { Home, Soon } from './features/Placeholder';
 import Profile from './features/profile/Profile';
+import CheckIn from './features/checkin/CheckIn';
+import VenueForm from './features/venue/VenueForm';
 
 export default function App() {
   const status = useSession((s) => s.status);
   const hasProfile = useSession((s) => !!s.profile);
+  const userId = useSession((s) => s.user?.id ?? null);
+  const storeReady = useStore((s) => s.loaded);
   const loc = useLocation();
+
+  // Lokale Daten des angemeldeten Kontos laden und mit dem Server abgleichen; bei Abmeldung entfernen
+  useEffect(() => {
+    if (status === 'in' && userId) {
+      startSync();
+      initStore(userId).then(() => sync(true));
+    } else if (status === 'out') {
+      void resetStore();
+    }
+  }, [status, userId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,7 +70,9 @@ export default function App() {
     );
   }
 
-  const hideTabs = /^\/(checkin|profil)/.test(loc.pathname);
+  if (!storeReady) return <div className="app"><div className="page muted center">Lädt …</div></div>;
+
+  const hideTabs = /^\/(checkin|profil|besuch\/|location\/neu)/.test(loc.pathname);
 
   return (
     <div className="app">
@@ -64,7 +82,9 @@ export default function App() {
         <Route path="/karte" element={<Soon title="Karte" emoji="🗺️" text="Alle besuchten Locations als farbige Pins." />} />
         <Route path="/liste" element={<Soon title="Ranking" emoji="🏆" text="Deine Locations, sortiert nach Bewertung." />} />
         <Route path="/freunde" element={<Soon title="Freunde" emoji="👥" text="Feed, Freundescode und „Bin unterwegs“." />} />
-        <Route path="/checkin" element={<Soon back title="Check-in" emoji="📍" text="Location wählen, bewerten, Foto hinzufügen." />} />
+        <Route path="/checkin" element={<CheckIn />} />
+        <Route path="/besuch/:visitId" element={<CheckIn />} />
+        <Route path="/location/neu" element={<VenueForm />} />
         <Route path="/profil" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
