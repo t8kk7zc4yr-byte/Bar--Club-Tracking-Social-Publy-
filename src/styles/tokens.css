@@ -16,6 +16,9 @@
   --warn: #facc15;
   --bad: #ef4444;
   --gold: #f5b301;
+  --danger-bg: #3a1620;
+  --danger-line: #5c1f2c;
+  --danger-text: #fca5a5;
   --radius: 18px;
   --tabbar-h: 64px;
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -41,6 +44,9 @@
     --warn: #ca8a04;
     --bad: #dc2626;
     --gold: #d99a00;
+    --danger-bg: #fdecec;
+    --danger-line: #f5b5b5;
+    --danger-text: #b91c1c;
     --map-filter: none;
     color-scheme: light;
   }
@@ -62,6 +68,9 @@
   --warn: #ca8a04;
   --bad: #dc2626;
   --gold: #d99a00;
+  --danger-bg: #fdecec;
+  --danger-line: #f5b5b5;
+  --danger-text: #b91c1c;
   --map-filter: none;
   color-scheme: light;
 }

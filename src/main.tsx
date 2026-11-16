@@ -5,6 +5,12 @@ import 'leaflet/dist/leaflet.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import App from './App';
+import { initSession } from './data/session';
+import { applyTheme, watchSystemTheme } from './data/theme';
+
+applyTheme();
+watchSystemTheme();
+initSession();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

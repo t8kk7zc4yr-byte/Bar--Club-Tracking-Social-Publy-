@@ -79,7 +79,7 @@ img { display: block; max-width: 100%; }
 .rbadge.sm { min-width: 30px; height: 30px; font-size: 14px; border-radius: 9px; }
 .rbadge.lg { min-width: 64px; height: 64px; font-size: 30px; border-radius: 18px; }
 .rbadge.top { box-shadow: 0 0 0 2px #fff3, 0 0 18px #f5b30188; background-image: linear-gradient(135deg, #ffe17a, #f5b301 50%, #d18b00); }
-.rpicker { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+.rpicker { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .rpicker button {
   aspect-ratio: 1 / 1.25; border-radius: 9px; border: 1px solid var(--line); background: var(--card-2);
   font-weight: 700; font-size: 14px; padding: 0;
@@ -124,7 +124,7 @@ textarea.input { min-height: 80px; resize: vertical; }
   background: var(--card-2); border-radius: 14px; padding: 12px 16px; font-weight: 600; font-size: 15px;
 }
 .btn.primary { background: var(--grad); border: 0; color: #fff; }
-.btn.danger { background: #3a1620; border-color: #5c1f2c; color: #fca5a5; }
+.btn.danger { background: var(--danger-bg); border-color: var(--danger-line); color: var(--danger-text); }
 .btn.block { width: 100%; }
 .btn.sm { padding: 8px 12px; font-size: 13px; border-radius: 11px; }
 .btn:disabled { opacity: 0.5; }
@@ -289,4 +289,15 @@ textarea.input { min-height: 80px; resize: vertical; }
 .ph { background: #facc1526; color: var(--warn); border-radius: 4px; padding: 0 3px; }
 .modal-backdrop { position: fixed; inset: 0; z-index: 2000; background: #000a; display: flex; align-items: flex-end; justify-content: center; }
 .modal { width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: var(--bg-2); border: 1px solid var(--line); border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + var(--safe-b)); }
-.warnbox { background: #3a1620; border: 1px solid #5c1f2c; color: #fca5a5; border-radius: 12px; padding: 10px 12px; margin: 10px 0 12px; font-size: 14px; line-height: 1.5; }
+.warnbox { background: var(--danger-bg); border: 1px solid var(--danger-line); color: var(--danger-text); border-radius: 12px; padding: 10px 12px; margin: 10px 0 12px; font-size: 14px; line-height: 1.5; }
+
+/* ---------- Ergänzungen Social Publy ---------- */
+.gate form { text-align: left; margin-top: 20px; }
+.check { display: flex; align-items: flex-start; gap: 12px; text-align: left; }
+.check input { width: 22px; height: 22px; flex: none; margin-top: 1px; accent-color: var(--accent); }
+.notice { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 10px 0 12px; font-size: 14px; line-height: 1.45; text-align: left; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); font-size: inherit; }
+.draft-banner { background: var(--danger-bg); border: 1px solid var(--danger-line); color: var(--danger-text); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; margin-bottom: 14px; }
+.legal-body h2 { font-size: 16px; margin: 18px 0 6px; }
+.legal-body p, .legal-body li { color: var(--muted); font-size: 14px; line-height: 1.55; }
+.code-box { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; letter-spacing: 0.08em; font-weight: 700; }
