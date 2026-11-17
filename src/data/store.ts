@@ -186,6 +186,17 @@ export async function patchUserVenue(venueId: string, patch: Partial<UserVenue>)
   await enqueue({ kind: 'userVenue', venueId });
 }
 
+/** Entfernt eine Location aus der eigenen Liste samt eigenen Besuchen und Fotos; der Katalogeintrag bleibt bestehen */
+export async function removeMyVenue(venueId: string) {
+  for (const v of state.visits.filter((x) => x.venueId === venueId)) await deleteVisit(v.id);
+  for (const p of state.photos.filter((x) => x.venueId === venueId)) await deletePhoto(p.id);
+  const d = await db();
+  await d.delete('userVenues', venueId);
+  await d.delete('venues', venueId);
+  setState({ userVenues: state.userVenues.filter((u) => u.venueId !== venueId), venues: state.venues.filter((v) => v.id !== venueId) });
+  await enqueue({ kind: 'userVenueDelete', venueId });
+}
+
 /* ---------- Besuche ---------- */
 
 export async function saveVisit(v: Omit<Visit, 'userId' | 'updatedAt'>) {

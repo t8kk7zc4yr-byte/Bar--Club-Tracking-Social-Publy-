@@ -90,7 +90,7 @@ export default function VenueForm() {
     if (forCheckin && !wishlist) nav(`/checkin?venue=${id}`, { replace: true });
     else {
       toast(wishlist ? '📌 Auf der Wunschliste' : 'Location angelegt');
-      nav('/', { replace: true });
+      nav(`/location/${id}`, { replace: true });
     }
   };
 

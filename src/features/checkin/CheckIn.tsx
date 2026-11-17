@@ -119,7 +119,7 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
       ...(!venue.coverPhotoId && photos[0] ? { coverPhotoId: photos[0].id } : {})
     });
     toast(existing ? 'Besuch aktualisiert' : firstTime ? `🎉 Neue Location: ${venue.name}!` : `🍻 Check-in bei ${venue.name}`);
-    nav('/', { replace: true });
+    nav(`/location/${venue.id}`, { replace: true });
   };
 
   const remove = async () => {

@@ -5,6 +5,7 @@ import type { Photo, UserVenue, Venue, Visit } from '../lib/types';
 export type OutboxOp =
   | { kind: 'venue'; id: string }
   | { kind: 'userVenue'; venueId: string }
+  | { kind: 'userVenueDelete'; venueId: string }
   | { kind: 'visit'; id: string }
   | { kind: 'visitDelete'; id: string }
   | { kind: 'photo'; id: string }

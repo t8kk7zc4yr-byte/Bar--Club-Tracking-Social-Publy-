@@ -14,6 +14,9 @@ import { Home, Soon } from './features/Placeholder';
 import Profile from './features/profile/Profile';
 import CheckIn from './features/checkin/CheckIn';
 import VenueForm from './features/venue/VenueForm';
+import VenueDetail from './features/venue/VenueDetail';
+import MapPage from './features/map/MapPage';
+import ListPage from './features/ranking/ListPage';
 
 export default function App() {
   const status = useSession((s) => s.status);
@@ -79,8 +82,9 @@ export default function App() {
       <Toasts />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/karte" element={<Soon title="Karte" emoji="🗺️" text="Alle besuchten Locations als farbige Pins." />} />
-        <Route path="/liste" element={<Soon title="Ranking" emoji="🏆" text="Deine Locations, sortiert nach Bewertung." />} />
+        <Route path="/karte" element={<MapPage />} />
+        <Route path="/liste" element={<ListPage />} />
+        <Route path="/location/:id" element={<VenueDetail />} />
         <Route path="/freunde" element={<Soon title="Freunde" emoji="👥" text="Feed, Freundescode und „Bin unterwegs“." />} />
         <Route path="/checkin" element={<CheckIn />} />
         <Route path="/besuch/:visitId" element={<CheckIn />} />

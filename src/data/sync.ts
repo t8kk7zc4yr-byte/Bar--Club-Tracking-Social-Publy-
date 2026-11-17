@@ -96,6 +96,9 @@ async function send(entry: OutboxEntry) {
       );
       return;
     }
+    case 'userVenueDelete':
+      check(await supabase.from('user_venues').delete().eq('user_id', uid).eq('venue_id', op.venueId));
+      return;
     case 'visit': {
       const v = s.visits.find((x) => x.id === op.id);
       if (!v) return;
