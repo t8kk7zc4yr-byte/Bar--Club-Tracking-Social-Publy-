@@ -108,7 +108,8 @@ async function send(entry: OutboxEntry) {
       return;
     }
     case 'visitDelete':
-      check(await supabase.from('visits').update({ deleted_at: new Date().toISOString() }).eq('id', op.id));
+      // endgültig löschen, damit keine Reste auf dem Server bleiben
+      check(await supabase.from('visits').delete().eq('id', op.id));
       return;
     case 'photo': {
       const p = s.photos.find((x) => x.id === op.id);

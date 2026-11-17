@@ -123,11 +123,6 @@ export function myVenues(s: State): VenueView[] {
   return out;
 }
 
-export const venueView = (s: State, id: string | null | undefined): VenueView | undefined => {
-  const v = s.venues.find((x) => x.id === id);
-  return v ? toView(v, s.userVenues.find((u) => u.venueId === id)) : undefined;
-};
-
 /* ---------- Locations ---------- */
 
 export type NewVenue = Pick<Venue, 'name' | 'category' | 'city'> & Partial<Pick<Venue, 'id' | 'address' | 'lat' | 'lng' | 'osmId'>>;

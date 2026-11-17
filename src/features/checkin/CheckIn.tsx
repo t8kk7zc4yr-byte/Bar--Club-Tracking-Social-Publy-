@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Header, PhotoImg, PricePicker, RatingPicker, TagPicker, Toggle } from '../../components/ui';
-import { addPhoto, deletePhoto, deleteVisit, patchUserVenue, saveVisit, useStore, venueView } from '../../data/store';
+import { addPhoto, deletePhoto, deleteVisit, patchUserVenue, saveVisit, toView, useStore } from '../../data/store';
 import { toast } from '../../lib/notify';
 import { categoryInfo, type TagId } from '../../lib/tags';
 import type { Drink } from '../../lib/types';
@@ -23,10 +23,14 @@ export default function CheckIn() {
 function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
   const nav = useNavigate();
   const existing = useStore((s) => (visitId ? s.visits.find((v) => v.id === visitId) : undefined));
-  const venue = useStore((s) => venueView(s, venueId));
+  // Zwei stabile Auswahlen und erst danach zusammenführen (ein neu gebautes Objekt im Selektor löst eine Endlosschleife aus)
+  const venueRow = useStore((s) => s.venues.find((v) => v.id === venueId));
+  const userVenue = useStore((s) => s.userVenues.find((u) => u.venueId === venueId));
+  const venue = useMemo(() => (venueRow ? toView(venueRow, userVenue) : undefined), [venueRow, userVenue]);
   const allVisits = useStore((s) => s.visits);
   const [id] = useState(() => existing?.id ?? uid());
-  const photos = useStore((s) => s.photos).filter((p) => p.visitId === id);
+  const allPhotos = useStore((s) => s.photos);
+  const photos = useMemo(() => allPhotos.filter((p) => p.visitId === id), [allPhotos, id]);
   const fileRef = useRef<HTMLInputElement>(null);
   const selfieRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +42,10 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
   const [foodNote, setFoodNote] = useState(venue?.foodNote ?? '');
   const [drinks, setDrinks] = useState<Drink[]>(existing?.drinks ?? []);
   const [customDrink, setCustomDrink] = useState('');
-  const [spend, setSpend] = useState(existing?.spend?.toString().replace('.', ',') ?? '');
+  const [spend, setSpend] = useState(() => {
+    const v = existing?.spend;
+    return v === null || v === undefined ? '' : (Number.isInteger(v) ? String(v) : v.toFixed(2)).replace('.', ',');
+  });
   const [companions, setCompanions] = useState<string[]>(existing?.companionsText ?? []);
   const [companionInput, setCompanionInput] = useState('');
   const [note, setNote] = useState(existing?.note ?? '');
