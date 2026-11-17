@@ -10,7 +10,8 @@ import { isConfigured } from './data/supabase';
 import AuthPage from './features/auth/AuthPage';
 import NewPassword from './features/auth/NewPassword';
 import Legal from './features/legal/Legal';
-import { Home, Soon } from './features/Placeholder';
+import { Soon } from './features/Placeholder';
+import Dashboard from './features/dashboard/Dashboard';
 import Profile from './features/profile/Profile';
 import CheckIn from './features/checkin/CheckIn';
 import VenueForm from './features/venue/VenueForm';
@@ -81,7 +82,7 @@ export default function App() {
     <div className="app">
       <Toasts />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="/karte" element={<MapPage />} />
         <Route path="/liste" element={<ListPage />} />
         <Route path="/location/:id" element={<VenueDetail />} />
