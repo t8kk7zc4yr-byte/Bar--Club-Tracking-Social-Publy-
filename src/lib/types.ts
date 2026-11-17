@@ -55,6 +55,8 @@ export interface Visit {
   /** Begleitung ohne Konto als Freitext; privat */
   companionsText: string[];
   tourId?: string | null;
+  /** markierte Freunde; sichtbar wird die Markierung erst nach deren Bestätigung */
+  tagged?: { userId: string; status: CompanionStatus }[];
   updatedAt: string;
   deletedAt?: string | null;
 }
@@ -119,6 +121,7 @@ export interface Activity {
   id: string;
   actorId: string;
   type: ActivityType;
+  photoId?: string | null;
   venueId?: string | null;
   venueName?: string | null;
   city?: string | null;

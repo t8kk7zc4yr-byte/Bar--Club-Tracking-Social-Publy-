@@ -10,7 +10,8 @@ import { isConfigured } from './data/supabase';
 import AuthPage from './features/auth/AuthPage';
 import NewPassword from './features/auth/NewPassword';
 import Legal from './features/legal/Legal';
-import { Soon } from './features/Placeholder';
+import Friends from './features/friends/Friends';
+import { refreshSocial, resetSocial } from './data/social';
 import Dashboard from './features/dashboard/Dashboard';
 import Profile from './features/profile/Profile';
 import CheckIn from './features/checkin/CheckIn';
@@ -31,8 +32,19 @@ export default function App() {
     if (status === 'in' && userId) {
       startSync();
       initStore(userId).then(() => sync(true));
-    } else if (status === 'out') {
+      void refreshSocial();
+      // Feed und Anfragen im Hintergrund aktuell halten, solange die App sichtbar ist
+      const t = window.setInterval(() => document.visibilityState === 'visible' && void refreshSocial(), 120000);
+      const onVisible = () => document.visibilityState === 'visible' && void refreshSocial();
+      document.addEventListener('visibilitychange', onVisible);
+      return () => {
+        clearInterval(t);
+        document.removeEventListener('visibilitychange', onVisible);
+      };
+    }
+    if (status === 'out') {
       void resetStore();
+      resetSocial();
     }
   }, [status, userId]);
 
@@ -86,7 +98,7 @@ export default function App() {
         <Route path="/karte" element={<MapPage />} />
         <Route path="/liste" element={<ListPage />} />
         <Route path="/location/:id" element={<VenueDetail />} />
-        <Route path="/freunde" element={<Soon title="Freunde" emoji="👥" text="Feed, Freundescode und „Bin unterwegs“." />} />
+        <Route path="/freunde" element={<Friends />} />
         <Route path="/checkin" element={<CheckIn />} />
         <Route path="/besuch/:visitId" element={<CheckIn />} />
         <Route path="/location/neu" element={<VenueForm />} />

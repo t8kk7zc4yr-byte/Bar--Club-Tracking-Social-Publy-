@@ -110,6 +110,18 @@ async function send(entry: OutboxEntry) {
       );
       return;
     }
+    case 'companions': {
+      const v = s.visits.find((x) => x.id === op.visitId);
+      if (!v) return;
+      const want = new Set((v.tagged ?? []).map((t) => t.userId));
+      const rows = check(await supabase.from('visit_companions').select('user_id').eq('visit_id', v.id)) as { user_id: string }[];
+      const have = new Set(rows.map((r) => r.user_id));
+      const remove = [...have].filter((id) => !want.has(id));
+      const add = [...want].filter((id) => !have.has(id));
+      if (remove.length) check(await supabase.from('visit_companions').delete().eq('visit_id', v.id).in('user_id', remove));
+      if (add.length) check(await supabase.from('visit_companions').insert(add.map((user_id) => ({ visit_id: v.id, user_id }))));
+      return;
+    }
     case 'visitDelete':
       // endgültig löschen, damit keine Reste auf dem Server bleiben
       check(await supabase.from('visits').delete().eq('id', op.id));
@@ -140,13 +152,19 @@ async function send(entry: OutboxEntry) {
 async function pull() {
   const uid = getState().userId;
   if (!uid) return;
-  const [uvRows, visitRows, photoRows] = await Promise.all([
+  const [uvRows, visitRows, photoRows, tagRows] = await Promise.all([
     supabase.from('user_venues').select('*').eq('user_id', uid).is('deleted_at', null),
     supabase.from('visits').select('*').eq('user_id', uid).is('deleted_at', null),
-    supabase.from('photos').select('*').eq('user_id', uid).is('deleted_at', null)
+    supabase.from('photos').select('*').eq('user_id', uid).is('deleted_at', null),
+    // Markierungen in eigenen Besuchen (Zeilen, in denen ich selbst markiert bin, gehören zu fremden Besuchen)
+    supabase.from('visit_companions').select('visit_id, user_id, status').neq('user_id', uid)
   ]);
   const userVenues = (check(uvRows) as unknown[]).map(userVenueFromRow);
-  const visits = (check(visitRows) as unknown[]).map(visitFromRow);
+  const tagged = new Map<string, NonNullable<Visit['tagged']>>();
+  for (const r of check(tagRows) as { visit_id: string; user_id: string; status: 'pending' | 'accepted' | 'declined' }[]) {
+    tagged.set(r.visit_id, [...(tagged.get(r.visit_id) ?? []), { userId: r.user_id, status: r.status }]);
+  }
+  const visits = (check(visitRows) as unknown[]).map(visitFromRow).map((v) => ({ ...v, tagged: tagged.get(v.id) ?? [] }));
   const photos = (check(photoRows) as unknown[]).map(photoFromRow);
   const ids = [...new Set([...userVenues.map((u) => u.venueId), ...visits.map((v) => v.venueId)])];
   const venues: Venue[] = [];

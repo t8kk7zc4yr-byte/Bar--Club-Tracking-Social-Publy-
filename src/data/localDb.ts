@@ -8,6 +8,7 @@ export type OutboxOp =
   | { kind: 'userVenueDelete'; venueId: string }
   | { kind: 'visit'; id: string }
   | { kind: 'visitDelete'; id: string }
+  | { kind: 'companions'; visitId: string }
   | { kind: 'photo'; id: string }
   | { kind: 'photoDelete'; id: string; storagePath: string };
 

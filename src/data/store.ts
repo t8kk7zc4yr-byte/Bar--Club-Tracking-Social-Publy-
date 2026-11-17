@@ -199,12 +199,18 @@ export async function removeMyVenue(venueId: string) {
 
 /* ---------- Besuche ---------- */
 
+const tagKey = (t: Visit['tagged']) => (t ?? []).map((x) => x.userId).sort().join(',');
+
+
 export async function saveVisit(v: Omit<Visit, 'userId' | 'updatedAt'>) {
   const visit: Visit = { ...v, userId: state.userId!, updatedAt: now(), deletedAt: null };
   const exists = state.visits.some((x) => x.id === v.id);
+  const prevTagged = state.visits.find((x) => x.id === v.id)?.tagged;
   await (await db()).put('visits', visit);
   setState({ visits: exists ? state.visits.map((x) => (x.id === v.id ? visit : x)) : [...state.visits, visit] });
+  const before = exists ? tagKey(prevTagged) : '';
   await enqueue({ kind: 'visit', id: visit.id });
+  if (tagKey(visit.tagged) !== before) await enqueue({ kind: 'companions', visitId: visit.id });
   // Wunschliste verlassen, sobald man dort war
   const uv = state.userVenues.find((u) => u.venueId === v.venueId);
   if (!uv || uv.wishlist) await patchUserVenue(v.venueId, { wishlist: false });
@@ -241,6 +247,16 @@ export async function addPhoto(file: File, venueId: string, visitId?: string): P
   setState({ photos: [...state.photos, photo] });
   await enqueue({ kind: 'photo', id });
   return id;
+}
+
+/** Gibt ein Foto für bestätigte Freunde frei oder nimmt die Freigabe zurück */
+export async function setPhotoShared(id: string, shared: boolean) {
+  const photo = state.photos.find((p) => p.id === id);
+  if (!photo || photo.shared === shared) return;
+  const next = { ...photo, shared };
+  await (await db()).put('photos', next);
+  setState({ photos: state.photos.map((p) => (p.id === id ? next : p)) });
+  await enqueue({ kind: 'photo', id });
 }
 
 export async function deletePhoto(id: string) {

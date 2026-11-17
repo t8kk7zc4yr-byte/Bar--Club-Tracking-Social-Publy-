@@ -5,6 +5,7 @@ import { Empty, PhotoImg, RatingBadge, RatingLegend } from '../../components/ui'
 import { VenueRow } from '../../components/VenueRow';
 import { APP } from '../../config/app';
 import { useSession } from '../../data/session';
+import { useSocial } from '../../data/social';
 import { myVenues, useStore } from '../../data/store';
 import { milestones } from '../../lib/achievements';
 import { buildChart, DIMENSIONS, isLongLabelDimension, METRICS, type Dimension, type Metric } from '../../lib/chartBuilder';
@@ -46,6 +47,32 @@ function Header({ name, right }: { name: string; right?: React.ReactNode }) {
         <Link className="icon-btn" to="/profil" aria-label="Profil und Einstellungen" style={{ display: 'grid', placeItems: 'center' }}>⚙️</Link>
       </div>
     </div>
+  );
+}
+
+function LiveBanner() {
+  const until = useSocial((s) => s.goingOutUntil);
+  const place = useSocial((s) => s.goingOutPlace);
+  const friends = useSocial((s) => s.friends);
+  const live = friends.filter((f) => f.status === 'accepted' && f.goingOutUntil);
+  return (
+    <>
+      {until && (
+        <Link to="/freunde" className="card going-out flex between" style={{ marginBottom: 12 }}>
+          <div>
+            <div className="live">Du bist unterwegs</div>
+            <div className="small muted">{place ? `${place} · ` : ''}bis {new Date(until).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr sichtbar</div>
+          </div>
+          <span className="muted">›</span>
+        </Link>
+      )}
+      {live.length > 0 && (
+        <Link to="/freunde" className="card flex" style={{ marginBottom: 12 }}>
+          <span className="live" />
+          <span className="small"><b>{live.map((f) => f.displayName).join(', ')}</b> {live.length === 1 ? 'ist' : 'sind'} gerade unterwegs</span>
+        </Link>
+      )}
+    </>
   );
 }
 
@@ -91,6 +118,7 @@ export default function Dashboard() {
       <div className="page">
         <Header name={name} />
         <SyncNote />
+        <LiveBanner />
         <Empty emoji="🍹" title="Noch keine Locations">
           Tippe unten auf das Plus, um deinen ersten Abend einzutragen.
         </Empty>
@@ -109,6 +137,7 @@ export default function Dashboard() {
         }
       />
       <SyncNote />
+      <LiveBanner />
 
       <div className="kpis">
         <div className="kpi hero">

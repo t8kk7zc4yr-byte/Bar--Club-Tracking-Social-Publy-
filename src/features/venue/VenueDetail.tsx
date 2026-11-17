@@ -4,7 +4,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Tiles, venueIcon } from '../../components/MapBits';
 import { Empty, PhotoImg, PricePicker, RatingBadge, RatingPicker, TagList, TagPicker } from '../../components/ui';
-import { addPhoto, deletePhoto, patchUserVenue, removeMyVenue, toView, useStore } from '../../data/store';
+import { useSession } from '../../data/session';
+import { useSocial } from '../../data/social';
+import { addPhoto, deletePhoto, patchUserVenue, removeMyVenue, setPhotoShared, toView, useStore } from '../../data/store';
 import { toast } from '../../lib/notify';
 import { fmtRating, tierFor } from '../../lib/rating';
 import { categoryInfo, fmtPrice, type TagId } from '../../lib/tags';
@@ -20,6 +22,8 @@ export default function VenueDetail() {
   const visits = useStore((s) => s.visits);
   const allPhotos = useStore((s) => s.photos);
   const photos = useMemo(() => allPhotos.filter((p) => p.venueId === id).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [allPhotos, id]);
+  const friends = useSocial((s) => s.friends);
+  const sharing = useSession((s) => s.profile?.shareWithFriends ?? false);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -186,11 +190,12 @@ export default function VenueDetail() {
           {photos.map((p) => (
             <div className="ph" key={p.id}>
               <PhotoImg id={p.id} onClick={() => setLightbox(p.id)} />
+              {p.shared && <span className="shared-mark" aria-label="für Freunde freigegeben">👥</span>}
             </div>
           ))}
         </div>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { onPhotos(e.target.files); e.target.value = ''; }} />
-        <p className="small muted mt8">Fotos sind privat. Bei Bildern mit anderen Personen vorher deren Einverständnis einholen.</p>
+        <p className="small muted mt8">Fotos sind privat, bis du sie einzeln freigibst (Foto antippen).</p>
       </div>
 
       <div className="section">
@@ -215,7 +220,14 @@ export default function VenueDetail() {
                       {v.spend ? ` · ${euro(v.spend)}` : ''}
                     </div>
                     {v.drinks.length > 0 && <div className="small">{v.drinks.map((x) => `${x.count}× ${x.name}`).join(', ')}</div>}
-                    {v.companionsText.length > 0 && <div className="small muted">mit {v.companionsText.join(', ')}</div>}
+                    {(v.companionsText.length > 0 || (v.tagged?.length ?? 0) > 0) && (
+                      <div className="small muted">
+                        mit {[
+                          ...(v.tagged ?? []).map((t) => `${friends.find((f) => f.id === t.userId)?.displayName ?? 'Freund'}${t.status === 'accepted' ? ' ✓' : t.status === 'declined' ? ' (abgelehnt)' : ' (offen)'}`),
+                          ...v.companionsText
+                        ].join(', ')}
+                      </div>
+                    )}
                     {v.note && <div className="small" style={{ fontStyle: 'italic' }}>„{v.note}“</div>}
                     {n > 0 && <div className="small muted">📸 {n} Foto{n > 1 ? 's' : ''}</div>}
                   </div>
@@ -248,6 +260,25 @@ export default function VenueDetail() {
         <div className="lightbox" onClick={() => setLightbox(null)}>
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'grid', gap: 10, justifyItems: 'center' }}>
             <PhotoImg id={lightbox} />
+            {(() => {
+              const ph = photos.find((p) => p.id === lightbox);
+              if (!ph) return null;
+              return (
+                <button
+                  className={`btn sm ${ph.shared ? 'primary' : ''}`}
+                  style={{ width: '100%' }}
+                  aria-pressed={ph.shared}
+                  onClick={async () => {
+                    if (!ph.shared && !sharing) return toast('Schalte zuerst im Profil „Mit Freunden teilen“ ein');
+                    if (!ph.shared && !confirm('Dieses Foto für deine bestätigten Freunde sichtbar machen? Sind andere Personen zu sehen, hole vorher ihr Einverständnis ein.')) return;
+                    await setPhotoShared(ph.id, !ph.shared);
+                    toast(ph.shared ? 'Freigabe zurückgenommen' : 'Für Freunde freigegeben');
+                  }}
+                >
+                  {ph.shared ? '👥 Für Freunde sichtbar · Freigabe zurücknehmen' : '🔒 Privat · Für Freunde freigeben'}
+                </button>
+              );
+            })()}
             <div className="btn-row" style={{ width: '100%' }}>
               <button className="btn sm" onClick={() => { patchUserVenue(venue.id, { coverPhotoId: lightbox }); setLightbox(null); toast('Titelbild gesetzt'); }}>Als Titelbild</button>
               <button

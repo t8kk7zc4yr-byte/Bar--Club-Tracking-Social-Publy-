@@ -319,3 +319,7 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .ach .lvl i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
 .ach .lvl i.on { background: var(--gold); }
 .seg { overflow-x: auto; }
+.shared-mark { position: absolute; left: 4px; bottom: 4px; background: #000a; border-radius: 8px; padding: 1px 5px; font-size: 12px; }
+button.link { background: none; border: 0; padding: 0; color: var(--accent); font-size: 13px; }
+:root[data-theme='light'] .going-out { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #86efac; }
+@media (prefers-color-scheme: light) { :root:not([data-theme='dark']) .going-out { background: linear-gradient(135deg, #dcfce7, #bbf7d0); border-color: #86efac; } }

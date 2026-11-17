@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Header, PhotoImg, PricePicker, RatingPicker, TagPicker, Toggle } from '../../components/ui';
 import { addPhoto, deletePhoto, deleteVisit, patchUserVenue, saveVisit, toView, useStore } from '../../data/store';
+import { useSession } from '../../data/session';
+import { setGoingOut, useSocial } from '../../data/social';
 import { toast } from '../../lib/notify';
 import { categoryInfo, type TagId } from '../../lib/tags';
 import type { Drink } from '../../lib/types';
@@ -17,10 +19,10 @@ export default function CheckIn() {
   const venueId = existing?.venueId ?? params.get('venue');
   if (!venueId) return <VenuePicker />;
   // key: Formular neu aufbauen, wenn eine andere Location oder ein anderer Besuch geöffnet wird
-  return <Form key={visitId ?? venueId} venueId={venueId} visitId={visitId} />;
+  return <Form key={visitId ?? venueId} venueId={venueId} visitId={visitId} presetWhen={params.get('when')} presetWith={params.get('with')} />;
 }
 
-function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
+function Form({ venueId, visitId, presetWhen, presetWith }: { venueId: string; visitId?: string; presetWhen?: string | null; presetWith?: string | null }) {
   const nav = useNavigate();
   const existing = useStore((s) => (visitId ? s.visits.find((v) => v.id === visitId) : undefined));
   // Zwei stabile Auswahlen und erst danach zusammenführen (ein neu gebautes Objekt im Selektor löst eine Endlosschleife aus)
@@ -34,7 +36,17 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const selfieRef = useRef<HTMLInputElement>(null);
 
-  const [date, setDate] = useState(() => toLocalInput(existing ? new Date(existing.visitedAt) : new Date()));
+  const allFriends = useSocial((s) => s.friends);
+  const friends = useMemo(() => allFriends.filter((f) => f.status === 'accepted'), [allFriends]);
+  const sharing = useSession((s) => s.profile?.shareWithFriends ?? false);
+  const alreadyOut = useSocial((s) => !!s.goingOutUntil);
+  const [taggedIds, setTaggedIds] = useState<string[]>(() => existing?.tagged?.map((t) => t.userId) ?? (presetWith ? [presetWith] : []));
+  const [announce, setAnnounce] = useState(false);
+
+  const [date, setDate] = useState(() => {
+    const preset = presetWhen ? new Date(presetWhen) : null;
+    return toLocalInput(existing ? new Date(existing.visitedAt) : preset && !Number.isNaN(preset.getTime()) ? preset : new Date());
+  });
   const [rating, setRating] = useState<number | null>(existing?.rating ?? null);
   const [updateOverall, setUpdateOverall] = useState(venue?.rating === null || venue?.rating === undefined);
   const [tags, setTags] = useState<TagId[]>(venue?.tags ?? []);
@@ -88,6 +100,8 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
     setCompanionInput('');
   };
   const hasFood = tags.includes('snacks') || tags.includes('kueche');
+  const isNow = Math.abs(new Date(date).getTime() - Date.now()) < 3 * 3600 * 1000;
+  const toggleTagged = (id: string) => setTaggedIds((t) => (t.includes(id) ? t.filter((x) => x !== id) : [...t, id]));
 
   const onFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -109,8 +123,11 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
       drinks,
       spend: Number.isFinite(amount) ? Math.max(0, Math.round(amount * 100) / 100) : null,
       companionsText: companions,
-      tourId: existing?.tourId ?? null
+      tourId: existing?.tourId ?? null,
+      // bestehende Bestätigungen behalten, neue Markierungen starten als offen
+      tagged: taggedIds.map((userId) => existing?.tagged?.find((t) => t.userId === userId) ?? { userId, status: 'pending' as const })
     });
+    if (announce && isNow && !existing) await setGoingOut(4, venue.name).catch(() => {});
     await patchUserVenue(venue.id, {
       tags,
       priceLevel: price,
@@ -226,6 +243,21 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
 
       <div className="field">
         <span>Mit wem?</span>
+        {friends.length > 0 && (
+          <>
+            <div className="chips wrap">
+              {friends.map((f) => {
+                const st = existing?.tagged?.find((t) => t.userId === f.id)?.status;
+                return (
+                  <button type="button" key={f.id} className={`chip ${taggedIds.includes(f.id) ? 'on' : ''}`} aria-pressed={taggedIds.includes(f.id)} onClick={() => toggleTagged(f.id)}>
+                    👤 {f.displayName}{taggedIds.includes(f.id) && st === 'accepted' ? ' ✓' : ''}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="small muted mt8" style={{ marginBottom: 10 }}>Markierte Freunde werden gefragt, bevor die Markierung gilt.</div>
+          </>
+        )}
         <div className="chips wrap">
           {[...new Set([...knownCompanions, ...companions])].map((n) => (
             <button type="button" key={n} className={`chip ${companions.includes(n) ? 'on' : ''}`} onClick={() => setCompanions((c) => (c.includes(n) ? c.filter((x) => x !== n) : [...c, n]))}>
@@ -237,7 +269,7 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
           <input className="input" placeholder="Name hinzufügen" value={companionInput} maxLength={40} onChange={(e) => setCompanionInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addCompanion()} />
           <button type="button" className="btn" style={{ flex: 'none' }} aria-label="Begleitung hinzufügen" onClick={addCompanion}>+</button>
         </div>
-        <div className="small muted mt8">Nur für dich sichtbar.</div>
+        <div className="small muted mt8">Frei eingetragene Namen sind nur für dich sichtbar.</div>
       </div>
 
       <div className="field">
@@ -261,6 +293,18 @@ function Form({ venueId, visitId }: { venueId: string; visitId?: string }) {
         <span>Notiz</span>
         <textarea className="input" value={note} maxLength={2000} onChange={(e) => setNote(e.target.value)} placeholder="Was war los? DJ, Spiel, Highlights …" />
       </label>
+
+      {!existing && isNow && sharing && !alreadyOut && (
+        <div className="card" style={{ padding: '2px 14px', marginBottom: 14 }}>
+          <div className="switch">
+            <div>
+              <div className="t">🍻 Freunden zeigen, dass ich unterwegs bin</div>
+              <div className="s">Sichtbar für 4 Stunden, danach automatisch aus</div>
+            </div>
+            <Toggle label="Unterwegs-Status setzen" checked={announce} onChange={setAnnounce} />
+          </div>
+        </div>
+      )}
 
       {existing && <button className="btn danger block" onClick={remove}>Besuch löschen</button>}
 
