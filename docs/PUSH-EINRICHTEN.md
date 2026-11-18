@@ -26,6 +26,8 @@ Die Werte stehen in der Datei `supabase/.push-secrets.local.txt` auf Tills Mac. 
 
 Im **SQL Editor** den Inhalt von `supabase/migrations/0004_push.sql` ausführen. Die Sicherheitsabfrage kann bestätigt werden.
 
+Danach die Strecke prüfen: `supabase/tests/push_check.sql` in zwei Schritten ausführen (Anleitung im Kopf der Datei). Erwartet werden drei Auslöser und eine Antwort mit Status 200.
+
 ## 4. Öffentlicher Schlüssel für die App
 
 1. GitHub-Repository, **Settings**, **Secrets and variables**, **Actions**, Reiter **Variables**.
