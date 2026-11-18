@@ -6,7 +6,7 @@ Der Name ist vorläufig. Er steht in `src/config/app.ts`, `vite.config.ts` (`APP
 
 ## Stand
 
-Alle sieben Phasen der Demo sind gebaut. Geprüft sind: Build, 32 automatische Tests, alle Zugriffsregeln gegen die echte Datenbank (`supabase/tests/rls_check.sql`), die Strecke Datenbank zu Push-Funktion (`supabase/tests/push_check.sql`) sowie Check-in, Karte, Ranking, Dashboard, Touren, Rückblick, Budget und Push auf einem iPhone.
+Alle sieben Phasen der Demo sind gebaut. Geprüft sind: Build, 32 automatische Tests, alle Zugriffsregeln gegen die echte Datenbank (`supabase/tests/rls_check.sql`), die Strecke Datenbank zu Push-Funktion (`supabase/tests/push_check.sql`) sowie Check-in, Karte, Ranking, Dashboard, Touren, Rückblick und Budget im Browser mit Handybreite. Auf einem echten iPhone bestätigt ist bisher nur Push (Freundschaftsanfrage).
 
 Noch offen: Test aller Abläufe mit zwei echten Konten (`docs/TESTPLAN.md`), ausgefüllte Datenschutzerklärung und Impressum, die Punkte aus `docs/RECHT-CHECKLISTE.md`.
 
