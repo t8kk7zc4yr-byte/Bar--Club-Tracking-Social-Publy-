@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PushBanner } from '../../components/PushControl';
 import { Avatar, Empty, Header, RatingBadge, Toggle } from '../../components/ui';
 import { APP } from '../../config/app';
 import { useSession } from '../../data/session';
@@ -171,6 +172,8 @@ export default function Friends() {
         )}
       </div>
 
+      {accepted.length > 0 && <PushBanner />}
+
       {incoming.length > 0 && (
         <div className="section">
           <div className="section-h"><h2>📨 Anfragen</h2></div>
@@ -291,7 +294,7 @@ export default function Friends() {
             </button>
             {open === f.id && (
               <div className="mt8">
-                <div className="small muted">Benachrichtigungen (wirksam, sobald Push eingerichtet ist)</div>
+                <div className="small muted">Push-Benachrichtigungen von {f.displayName}</div>
                 <div className="switch">
                   <div><div className="t">Neue Einträge</div><div className="s">Check-ins, Bewertungen, Fotos</div></div>
                   <Toggle label="Neue Einträge" checked={f.notifyEntries} onChange={(x) => guard(() => setFriendNotify(f.id, { notifyEntries: x }))} />

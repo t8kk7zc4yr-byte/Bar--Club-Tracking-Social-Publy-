@@ -14,6 +14,7 @@ import Friends from './features/friends/Friends';
 import TourPage from './features/tours/TourPage';
 import Wrapped from './features/wrapped/Wrapped';
 import { refreshSocial, resetSocial } from './data/social';
+import { refreshPushSubscription } from './data/push';
 import Dashboard from './features/dashboard/Dashboard';
 import Profile from './features/profile/Profile';
 import CheckIn from './features/checkin/CheckIn';
@@ -35,6 +36,7 @@ export default function App() {
       startSync();
       initStore(userId).then(() => sync(true));
       void refreshSocial();
+      void refreshPushSubscription();
       // Feed und Anfragen im Hintergrund aktuell halten, solange die App sichtbar ist
       const t = window.setInterval(() => document.visibilityState === 'visible' && void refreshSocial(), 120000);
       const onVisible = () => document.visibilityState === 'visible' && void refreshSocial();

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { APP } from '../../config/app';
 import { Header, RatingLegend, Toggle } from '../../components/ui';
 import DeleteDialog from '../../components/DeleteDialog';
+import { PushSwitch } from '../../components/PushControl';
 import { exportMyData } from '../../data/account';
 import { authMessage, signOut, updateBudget, updateProfile, useSession } from '../../data/session';
 import { useStore } from '../../data/store';
@@ -116,6 +117,13 @@ export default function Profile() {
             </div>
             <Toggle label="Mit Freunden teilen" checked={profile.shareWithFriends} onChange={(x) => save({ shareWithFriends: x })} />
           </div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-h"><h2>🔔 Benachrichtigungen</h2></div>
+        <div className="card" style={{ padding: '2px 14px' }}>
+          <PushSwitch />
         </div>
       </div>
 

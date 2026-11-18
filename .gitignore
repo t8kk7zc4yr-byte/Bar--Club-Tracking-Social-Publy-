@@ -6,3 +6,4 @@ dist
 .env.local
 supabase/.temp
 *.tsbuildinfo
+supabase/.push-secrets.local.txt

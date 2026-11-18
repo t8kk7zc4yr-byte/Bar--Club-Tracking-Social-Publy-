@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { APP } from '../config/app';
 import type { Profile } from '../lib/types';
+import { disablePush } from './push';
 import { appUrl, authLink, supabase } from './supabase';
 
 export type SessionStatus = 'loading' | 'out' | 'in' | 'recovery';
@@ -184,6 +185,7 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
+  await disablePush().catch(() => {});
   await supabase.auth.signOut();
   set({ status: 'out', user: null, profile: null });
 }

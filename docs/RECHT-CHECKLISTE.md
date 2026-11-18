@@ -17,7 +17,8 @@ Diese Liste ist eine Arbeitshilfe und ersetzt keine Rechtsberatung.
 * [ ] Auftragsverarbeitungsvertrag mit Supabase abschließen, Unterauftragsverarbeiter prüfen (Art. 28 DSGVO)
 * [ ] Verantwortliche festlegen: gemeinsam (Art. 26 DSGVO) oder GbR
 * [ ] Datenschutzhinweise und Impressum ausfüllen (§ 5 DDG, § 18 MStV)
-* [ ] Hinweis auf Datenübermittlung an OpenStreetMap-Dienste (Kacheln, Overpass, Nominatim) aufnehmen
+* [ ] Hinweis auf Datenübermittlung an OpenStreetMap-Dienste (Kacheln, Overpass, Nominatim) und Photon (Komoot) aufnehmen
+* [ ] Hinweis auf Push-Dienste (Apple, Google) aufnehmen; in den In-App-Datenschutzhinweisen als Entwurf enthalten
 
 ## Vor einem Launch
 

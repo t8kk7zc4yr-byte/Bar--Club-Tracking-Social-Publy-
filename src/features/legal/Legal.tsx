@@ -42,7 +42,8 @@ function Privacy() {
       <ul>
         <li>Hosting der Datenbank, Anmeldung und Fotos: Supabase, Serverstandort Frankfurt am Main. [Angaben zum Auftragsverarbeitungsvertrag]</li>
         <li>Auslieferung der App: GitHub Pages. [Angaben ergänzen]</li>
-        <li>Karten und Ortssuche: Dienste des OpenStreetMap-Projekts. Beim Laden der Karte und bei der Suche werden IP-Adresse und der angefragte Kartenausschnitt bzw. Suchbegriff übertragen.</li>
+        <li>Karten und Ortssuche: Kartenkacheln und Suche des OpenStreetMap-Projekts sowie der Suchdienst Photon (Komoot) für Locations in der Nähe. Beim Laden der Karte und bei der Suche werden IP-Adresse und der angefragte Kartenausschnitt bzw. Suchbegriff übertragen.</li>
+        <li>Push-Benachrichtigungen (nur wenn du sie einschaltest): Zustellung über den Push-Dienst deines Geräts bzw. Browsers (Apple oder Google). Der Inhalt ist Ende-zu-Ende verschlüsselt; der Dienst erhält eine Gerätekennung und den Zeitpunkt der Zustellung.</li>
       </ul>
       <p>Es werden keine Analyse- oder Werbedienste eingesetzt.</p>
 
