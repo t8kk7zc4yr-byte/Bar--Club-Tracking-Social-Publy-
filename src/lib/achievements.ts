@@ -1,5 +1,6 @@
 import { longestStreak, type StatVenue } from './stats';
 import { SPORT_TAGS, type CategoryId } from './tags';
+import { maxStationsPerNight } from './tours';
 import type { Visit } from './types';
 
 /**
@@ -52,6 +53,7 @@ export function milestones(venues: StatVenue[], visits: Visit[], photoCount: num
     tiered('visits', '🥂', 'Unterwegs', visits.length, [1, 10, 25, 50, 100, 250], (g) => `${g} ${g === 1 ? 'Besuch' : 'Besuche'} eingetragen`),
     tiered('cities', '🗺️', 'Städtetrip', cities, [2, 3, 5, 10, 20], (g) => `In ${g} Städten unterwegs`),
     tiered('streak', '🔥', 'Dranbleiber', longestStreak(visits), [2, 4, 8, 12, 26], (g) => `${g} Wochen in Folge unterwegs`),
+    tiered('tour', '🚶', 'Kneipentour', maxStationsPerNight(visits), [2, 3, 5, 8], (g) => `${g} Locations an einem Abend`),
     tiered('variety', '🎨', 'Sammler', cats, [3, 5, 8, 12], (g) => `${g} verschiedene Arten von Locations`),
     tiered('regular', '🪑', 'Stammgast', maxSame, [5, 10, 25], (g) => `${g}× in derselben Location`),
     tiered('sport', '⚽', 'Public Viewer', sport, [1, 3, 10], (g) => `${g} ${g === 1 ? 'Location' : 'Locations'} mit Live-Sport besucht`),

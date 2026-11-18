@@ -12,6 +12,7 @@ import { fmtRating, tierFor } from '../../lib/rating';
 import { categoryInfo, fmtPrice, type TagId } from '../../lib/tags';
 import { euro, fmtDate, MONTHS_SHORT, relTime } from '../../lib/util';
 import { venueStats } from '../../lib/venueStats';
+import { FriendsOnVenue } from '../friends/FriendTips';
 
 export default function VenueDetail() {
   const { id } = useParams();
@@ -179,6 +180,8 @@ export default function VenueDetail() {
           </div>
         </div>
       )}
+
+      <FriendsOnVenue venueId={venue.id} />
 
       <div className="section">
         <div className="section-h">

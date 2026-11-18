@@ -4,13 +4,14 @@ import { Avatar, Empty, Header, RatingBadge, Toggle } from '../../components/ui'
 import { APP } from '../../config/app';
 import { useSession } from '../../data/session';
 import {
-  acceptFriend, answerCompanion, fetchVenue, markFeedSeen, refreshSocial, removeCompanionTag, removeFriend, requestFriend,
+  acceptFriend, answerCompanion, fetchVenue, joinTour, markFeedSeen, refreshSocial, removeCompanionTag, removeFriend, requestFriend,
   setFriendNotify, setGoingOut, sharedPhotoUrl, useSocial, type CompanionRequest
 } from '../../data/social';
 import { adoptVenue } from '../../data/store';
 import { toast } from '../../lib/notify';
 import type { Activity, Friend } from '../../lib/types';
 import { fmtDate, relTime } from '../../lib/util';
+import FriendTips from './FriendTips';
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
@@ -51,6 +52,7 @@ export default function Friends() {
   const seenAt = useSocial((s) => s.seenAt);
   const error = useSocial((s) => s.error);
   const loaded = useSocial((s) => s.loaded);
+  const tours = useSocial((s) => s.tours);
   const [seenBefore] = useState(seenAt);
   const [code, setCode] = useState('');
   const [place, setPlace] = useState('');
@@ -217,6 +219,29 @@ export default function Friends() {
         </div>
       )}
 
+      {tours.some((t) => t.ownerId !== uid && t.day >= new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10)) && (
+        <div className="section">
+          <div className="section-h"><h2>🚶 Touren deiner Freunde</h2></div>
+          {tours
+            .filter((t) => t.ownerId !== uid && t.day >= new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10))
+            .map((t) => (
+              <div className="card flex" key={t.id} style={{ marginBottom: 8 }}>
+                <div className="grow" style={{ cursor: 'pointer' }} onClick={() => nav(`/tour/${t.id}`)}>
+                  <b>{t.name}</b>
+                  <div className="small muted">von {t.ownerName} · {t.members} {t.members === 1 ? 'Person' : 'Personen'}</div>
+                </div>
+                {t.joined ? (
+                  <button className="btn sm" onClick={() => nav(`/tour/${t.id}`)}>Ansehen</button>
+                ) : (
+                  <button className="btn sm primary" disabled={busy} onClick={() => guard(async () => { await joinTour(t); toast(`Du bist bei „${t.name}“ dabei`); })}>Beitreten</button>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
+
+      <FriendTips />
+
       <div className="section">
         <div className="section-h">
           <h2>📰 Aktivitäten</h2>
@@ -234,6 +259,7 @@ export default function Friends() {
                     <div style={{ fontWeight: 600 }}>{t.title}</div>
                     <div className="small muted">{[t.body, relTime(a.createdAt)].filter(Boolean).join(' · ')}</div>
                     {a.type === 'photo' && a.photoId && <SharedPhoto id={a.photoId} />}
+                    {a.type === 'tour' && a.tourId && <button className="link" onClick={() => nav(`/tour/${a.tourId}`)}>Tour ansehen</button>}
                   </div>
                   {typeof a.rating === 'number' && <RatingBadge value={a.rating} size="sm" />}
                   {a.createdAt > seenBefore && <span className="unread" aria-label="neu" />}

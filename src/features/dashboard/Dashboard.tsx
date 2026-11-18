@@ -89,9 +89,11 @@ function SyncNote() {
 
 export default function Dashboard() {
   const name = useSession((s) => s.profile?.displayName ?? '');
+  const limit = useSession((s) => s.profile?.monthlySpendLimit ?? null);
   const venues = useStore(myVenues);
   const visits = useStore((s) => s.visits);
   const photoCount = useStore((s) => s.photos.length);
+  const tours = useStore((s) => s.tours);
   // Stichtag einmal je Aufruf der Seite festhalten, damit die Berechnungen stabil bleiben
   const [now] = useState(() => new Date());
   const years = useMemo(() => {
@@ -151,6 +153,7 @@ export default function Dashboard() {
               {isCurrentYear && <Delta cur={d.monthVisits} prev={d.prevMonthVisits} label="Vormonat" />}
               <div className="d">{euro(isCurrentYear ? d.spendMonth : d.spendYear)} ausgegeben</div>
               {d.streakWeeks > 1 && isCurrentYear && <div className="d">🔥 {d.streakWeeks} Wochen in Folge</div>}
+              {isCurrentYear && limit ? <div className="d">{d.spendMonth > limit ? '⚠️ Budget überschritten' : `${euro(limit - d.spendMonth)} Budget übrig`}</div> : null}
             </div>
           </div>
         </div>
@@ -313,6 +316,7 @@ export default function Dashboard() {
               {d.topWeekday && <>📅 Ausgehtag: <b>{d.topWeekday}</b><br /></>}
               {d.perCity[0] && <>🏙️ Top-Stadt: <b>{d.perCity[0].name}</b></>}
             </div>
+            <Link to={`/rueckblick/${year}`} className="btn primary block mt12">✨ Rückblick als Story teilen</Link>
           </div>
         </div>
       )}
@@ -330,6 +334,27 @@ export default function Dashboard() {
         <div className="section">
           <div className="section-h"><h2>🔁 Am häufigsten besucht</h2></div>
           {d.mostVisited.slice(0, 3).map((s, i) => <VenueRow key={s.venue.id} s={s} rank={i + 1} />)}
+        </div>
+      )}
+
+      {tours.length > 0 && (
+        <div className="section">
+          <div className="section-h"><h2>🚶 Kneipentouren</h2></div>
+          <div className="card" style={{ padding: '2px 14px' }}>
+            {[...tours].sort((a, b) => b.day.localeCompare(a.day)).slice(0, 5).map((t) => {
+              const n = new Set(visits.filter((v) => v.tourId === t.id).map((v) => v.venueId)).size;
+              return (
+                <Link key={t.id} to={`/tour/${t.id}`} className="feed-item" style={{ alignItems: 'center' }}>
+                  <span style={{ fontSize: 22 }}>🚶</span>
+                  <div className="grow">
+                    <div style={{ fontWeight: 600 }}>{t.name}</div>
+                    <div className="small muted">{n} {n === 1 ? 'Station' : 'Stationen'}</div>
+                  </div>
+                  <span className="muted">›</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
 

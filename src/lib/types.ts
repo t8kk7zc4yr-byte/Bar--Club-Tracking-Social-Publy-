@@ -122,6 +122,7 @@ export interface Activity {
   actorId: string;
   type: ActivityType;
   photoId?: string | null;
+  tourId?: string | null;
   venueId?: string | null;
   venueName?: string | null;
   city?: string | null;

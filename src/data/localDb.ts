@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Photo, UserVenue, Venue, Visit } from '../lib/types';
+import type { Photo, Tour, UserVenue, Venue, Visit } from '../lib/types';
 
 /** Eine ausstehende Änderung, die noch an den Server gesendet werden muss */
 export type OutboxOp =
@@ -9,6 +9,7 @@ export type OutboxOp =
   | { kind: 'visit'; id: string }
   | { kind: 'visitDelete'; id: string }
   | { kind: 'companions'; visitId: string }
+  | { kind: 'tour'; id: string }
   | { kind: 'photo'; id: string }
   | { kind: 'photoDelete'; id: string; storagePath: string };
 
@@ -23,6 +24,7 @@ interface AppDB extends DBSchema {
   userVenues: { key: string; value: UserVenue };
   visits: { key: string; value: Visit };
   photos: { key: string; value: Photo };
+  tours: { key: string; value: Tour };
   /** Bilddateien: noch nicht hochgeladene Fotos und Zwischenspeicher */
   blobs: { key: string; value: Blob };
   outbox: { key: number; value: OutboxEntry };
@@ -33,22 +35,25 @@ let dbPromise: Promise<IDBPDatabase<AppDB>> | null = null;
 
 export function db() {
   if (!dbPromise) {
-    dbPromise = openDB<AppDB>('social-publy', 1, {
-      upgrade(d) {
-        d.createObjectStore('venues', { keyPath: 'id' });
-        d.createObjectStore('userVenues', { keyPath: 'venueId' });
-        d.createObjectStore('visits', { keyPath: 'id' });
-        d.createObjectStore('photos', { keyPath: 'id' });
-        d.createObjectStore('blobs');
-        d.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
-        d.createObjectStore('meta');
+    dbPromise = openDB<AppDB>('social-publy', 2, {
+      upgrade(d, oldVersion) {
+        if (oldVersion < 1) {
+          d.createObjectStore('venues', { keyPath: 'id' });
+          d.createObjectStore('userVenues', { keyPath: 'venueId' });
+          d.createObjectStore('visits', { keyPath: 'id' });
+          d.createObjectStore('photos', { keyPath: 'id' });
+          d.createObjectStore('blobs');
+          d.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
+          d.createObjectStore('meta');
+        }
+        if (oldVersion < 2) d.createObjectStore('tours', { keyPath: 'id' });
       }
     });
   }
   return dbPromise;
 }
 
-const DATA_STORES = ['venues', 'userVenues', 'visits', 'photos', 'blobs', 'outbox', 'meta'] as const;
+const DATA_STORES = ['venues', 'userVenues', 'visits', 'photos', 'tours', 'blobs', 'outbox', 'meta'] as const;
 
 /** Entfernt alle lokalen Daten (Abmeldung oder Kontowechsel) */
 export async function clearLocal() {

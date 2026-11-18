@@ -1,4 +1,4 @@
-import type { Photo, UserVenue, Venue, Visit } from '../lib/types';
+import type { Photo, Tour, UserVenue, Venue, Visit } from '../lib/types';
 import { db, type OutboxEntry } from './localDb';
 import { getState, setRemoteUrl, setState, setSyncKick } from './store';
 import { supabase } from './supabase';
@@ -99,6 +99,12 @@ async function send(entry: OutboxEntry) {
     case 'userVenueDelete':
       check(await supabase.from('user_venues').delete().eq('user_id', uid).eq('venue_id', op.venueId));
       return;
+    case 'tour': {
+      const t = s.tours.find((x) => x.id === op.id);
+      if (!t || t.ownerId !== uid) return;
+      check(await supabase.from('tours').upsert({ id: t.id, owner_id: uid, name: t.name, day: t.day }));
+      return;
+    }
     case 'visit': {
       const v = s.visits.find((x) => x.id === op.id);
       if (!v) return;
@@ -152,13 +158,20 @@ async function send(entry: OutboxEntry) {
 async function pull() {
   const uid = getState().userId;
   if (!uid) return;
-  const [uvRows, visitRows, photoRows, tagRows] = await Promise.all([
+  const [uvRows, visitRows, photoRows, tagRows, tourRows, memberRows] = await Promise.all([
     supabase.from('user_venues').select('*').eq('user_id', uid).is('deleted_at', null),
     supabase.from('visits').select('*').eq('user_id', uid).is('deleted_at', null),
     supabase.from('photos').select('*').eq('user_id', uid).is('deleted_at', null),
     // Markierungen in eigenen Besuchen (Zeilen, in denen ich selbst markiert bin, gehören zu fremden Besuchen)
-    supabase.from('visit_companions').select('visit_id, user_id, status').neq('user_id', uid)
+    supabase.from('visit_companions').select('visit_id, user_id, status').neq('user_id', uid),
+    supabase.from('tours').select('*'),
+    supabase.from('tour_members').select('tour_id').eq('user_id', uid)
   ]);
+  const joined = new Set((check(memberRows) as { tour_id: string }[]).map((r) => r.tour_id));
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  const tours: Tour[] = (check(tourRows) as any[])
+    .filter((t) => t.owner_id === uid || joined.has(t.id))
+    .map((t) => ({ id: t.id, ownerId: t.owner_id, name: t.name, day: t.day, createdAt: t.created_at }));
   const userVenues = (check(uvRows) as unknown[]).map(userVenueFromRow);
   const tagged = new Map<string, NonNullable<Visit['tagged']>>();
   for (const r of check(tagRows) as { visit_id: string; user_id: string; status: 'pending' | 'accepted' | 'declined' }[]) {
@@ -175,16 +188,18 @@ async function pull() {
   const d = await db();
   // Zwischenzeitlich neue lokale Änderungen haben Vorrang
   if ((await d.count('outbox')) > 0 || getState().userId !== uid) return;
-  const tx = d.transaction(['venues', 'userVenues', 'visits', 'photos'], 'readwrite');
+  const tx = d.transaction(['venues', 'userVenues', 'visits', 'photos', 'tours'], 'readwrite');
   await Promise.all([
-    tx.objectStore('venues').clear(), tx.objectStore('userVenues').clear(), tx.objectStore('visits').clear(), tx.objectStore('photos').clear()
+    tx.objectStore('venues').clear(), tx.objectStore('userVenues').clear(), tx.objectStore('visits').clear(), tx.objectStore('photos').clear(),
+    tx.objectStore('tours').clear()
   ]);
+  for (const t of tours) tx.objectStore('tours').put(t);
   for (const v of venues) tx.objectStore('venues').put(v);
   for (const u of userVenues) tx.objectStore('userVenues').put(u);
   for (const v of visits) tx.objectStore('visits').put(v);
   for (const p of photos) tx.objectStore('photos').put(p);
   await tx.done;
-  setState({ venues, userVenues, visits, photos });
+  setState({ venues, userVenues, visits, photos, tours });
 }
 
 let running = false;

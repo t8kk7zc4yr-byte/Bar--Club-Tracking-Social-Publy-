@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { compressImage } from '../lib/image';
-import type { Photo, UserVenue, Venue, Visit } from '../lib/types';
+import { groupByNight, nightKey, tourName } from '../lib/tours';
+import type { Photo, Tour, UserVenue, Venue, Visit } from '../lib/types';
 import { uid } from '../lib/util';
 import { clearLocal, db, type OutboxOp } from './localDb';
 
@@ -11,6 +12,8 @@ export interface State {
   userVenues: UserVenue[];
   visits: Visit[];
   photos: Photo[];
+  /** eigene Touren und Touren, denen man beigetreten ist */
+  tours: Tour[];
   /** Anzahl noch nicht übertragener Änderungen */
   pending: number;
   syncing: boolean;
@@ -18,7 +21,7 @@ export interface State {
 }
 
 const empty = (): State => ({
-  loaded: false, userId: null, venues: [], userVenues: [], visits: [], photos: [], pending: 0, syncing: false, syncError: null
+  loaded: false, userId: null, venues: [], userVenues: [], visits: [], photos: [], tours: [], pending: 0, syncing: false, syncError: null
 });
 
 let state: State = empty();
@@ -62,10 +65,10 @@ export async function initStore(userId: string) {
     await clearLocal();
     await d.put('meta', userId, 'userId');
   }
-  const [venues, userVenues, visits, photos, pending] = await Promise.all([
-    d.getAll('venues'), d.getAll('userVenues'), d.getAll('visits'), d.getAll('photos'), d.count('outbox')
+  const [venues, userVenues, visits, photos, tours, pending] = await Promise.all([
+    d.getAll('venues'), d.getAll('userVenues'), d.getAll('visits'), d.getAll('photos'), d.getAll('tours'), d.count('outbox')
   ]);
-  setState({ loaded: true, userId, venues, userVenues, visits, photos, pending });
+  setState({ loaded: true, userId, venues, userVenues, visits, photos, tours, pending });
   kick();
 }
 
@@ -214,6 +217,59 @@ export async function saveVisit(v: Omit<Visit, 'userId' | 'updatedAt'>) {
   // Wunschliste verlassen, sobald man dort war
   const uv = state.userVenues.find((u) => u.venueId === v.venueId);
   if (!uv || uv.wishlist) await patchUserVenue(v.venueId, { wishlist: false });
+  await assignTour(nightKey(visit.visitedAt));
+}
+
+/**
+ * Bündelt die Besuche eines Abends zu einer Tour: Gibt es für den Abend schon eine Tour (eigene oder beigetretene),
+ * kommen alle Besuche dorthin; sonst entsteht ab dem zweiten Besuch eine neue Tour.
+ */
+export async function assignTour(night: string) {
+  const list = groupByNight(state.visits).get(night) ?? [];
+  const known = new Set(state.tours.map((t) => t.id));
+  const existing =
+    list.find((v) => v.tourId && known.has(v.tourId))?.tourId ??
+    state.tours.find((t) => t.day === night && t.ownerId !== state.userId)?.id ??
+    state.tours.find((t) => t.day === night)?.id;
+  let tourId = existing;
+  if (!tourId) {
+    if (list.length < 2) return;
+    const tour: Tour = { id: uid(), ownerId: state.userId!, name: tourName(night), day: night, createdAt: now() };
+    await (await db()).put('tours', tour);
+    setState({ tours: [...state.tours, tour] });
+    await enqueue({ kind: 'tour', id: tour.id });
+    tourId = tour.id;
+  }
+  await moveVisitsToTour(night, tourId);
+}
+
+/** Ordnet alle eigenen Besuche eines Abends der Tour zu */
+export async function moveVisitsToTour(night: string, tourId: string | null) {
+  const d = await db();
+  const changed: Visit[] = [];
+  for (const v of groupByNight(state.visits).get(night) ?? []) {
+    if (v.tourId === tourId) continue;
+    const next = { ...v, tourId, updatedAt: now() };
+    await d.put('visits', next);
+    changed.push(next);
+  }
+  if (!changed.length) return;
+  const byId = new Map(changed.map((v) => [v.id, v]));
+  setState({ visits: state.visits.map((v) => byId.get(v.id) ?? v) });
+  await enqueue(...changed.map((v) => ({ kind: 'visit' as const, id: v.id })));
+}
+
+/** Merkt sich eine Tour, der man beigetreten ist, bzw. entfernt sie */
+export async function rememberTour(tour: Tour | null, removeId?: string) {
+  const d = await db();
+  if (tour) {
+    await d.put('tours', tour);
+    setState({ tours: [...state.tours.filter((t) => t.id !== tour.id), tour] });
+  }
+  if (removeId) {
+    await d.delete('tours', removeId);
+    setState({ tours: state.tours.filter((t) => t.id !== removeId) });
+  }
 }
 
 export async function deleteVisit(id: string) {

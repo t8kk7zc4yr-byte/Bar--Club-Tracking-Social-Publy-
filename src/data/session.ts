@@ -58,7 +58,9 @@ async function loadProfile(userId: string): Promise<Profile | null> {
     .eq('id', userId)
     .maybeSingle();
   if (error || !data) return null;
-  return toProfile(data as ProfileRow);
+  const profile = toProfile(data as ProfileRow);
+  const { data: st } = await supabase.from('user_settings').select('monthly_spend_limit').eq('user_id', userId).maybeSingle();
+  return { ...profile, monthlySpendLimit: st?.monthly_spend_limit === null || st?.monthly_spend_limit === undefined ? null : Number(st.monthly_spend_limit) };
 }
 
 async function enter(user: User, status: SessionStatus = 'in') {
@@ -211,7 +213,16 @@ export async function updateProfile(patch: Partial<Pick<Profile, 'displayName' |
     .select('id, display_name, friend_code, avatar_color, share_with_friends, adult_confirmed_at')
     .single();
   if (error) throw error;
-  set({ profile: toProfile(data as ProfileRow) });
+  set({ profile: { ...toProfile(data as ProfileRow), monthlySpendLimit: profile.monthlySpendLimit ?? null } });
+}
+
+/** Monatliches Ausgehbudget in Euro; null entfernt es */
+export async function updateBudget(limit: number | null) {
+  const { profile } = state;
+  if (!profile) return;
+  const { error } = await supabase.from('user_settings').upsert({ user_id: profile.id, monthly_spend_limit: limit }, { onConflict: 'user_id' });
+  if (error) throw error;
+  set({ profile: { ...profile, monthlySpendLimit: limit } });
 }
 
 export const MIN_PASSWORD = 8;

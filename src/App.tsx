@@ -11,6 +11,8 @@ import AuthPage from './features/auth/AuthPage';
 import NewPassword from './features/auth/NewPassword';
 import Legal from './features/legal/Legal';
 import Friends from './features/friends/Friends';
+import TourPage from './features/tours/TourPage';
+import Wrapped from './features/wrapped/Wrapped';
 import { refreshSocial, resetSocial } from './data/social';
 import Dashboard from './features/dashboard/Dashboard';
 import Profile from './features/profile/Profile';
@@ -88,7 +90,7 @@ export default function App() {
 
   if (!storeReady) return <div className="app"><div className="page muted center">Lädt …</div></div>;
 
-  const hideTabs = /^\/(checkin|profil|besuch\/|location\/neu)/.test(loc.pathname);
+  const hideTabs = /^\/(checkin|profil|besuch\/|location\/neu|tour\/|rueckblick\/)/.test(loc.pathname);
 
   return (
     <div className="app">
@@ -103,6 +105,8 @@ export default function App() {
         <Route path="/besuch/:visitId" element={<CheckIn />} />
         <Route path="/location/neu" element={<VenueForm />} />
         <Route path="/profil" element={<Profile />} />
+        <Route path="/tour/:id" element={<TourPage />} />
+        <Route path="/rueckblick/:year" element={<Wrapped />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!hideTabs && <TabBar />}

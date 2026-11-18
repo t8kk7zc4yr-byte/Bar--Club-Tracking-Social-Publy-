@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
-import type { Activity, CompanionStatus, Friend, Venue } from '../lib/types';
+import type { TagId } from '../lib/tags';
+import type { Activity, CompanionStatus, Friend, Tour, Venue } from '../lib/types';
+import { getState as getStore, moveVisitsToTour, rememberTour } from './store';
 import { getSession } from './session';
 import { venueFromRow } from './sync';
 import { supabase } from './supabase';
@@ -16,11 +18,36 @@ export interface CompanionRequest {
   status: CompanionStatus;
 }
 
+/** Angaben eines Freundes zu einer Location (nur wenn er das Teilen aktiviert hat) */
+export interface FriendRating {
+  userId: string;
+  venueId: string;
+  rating: number | null;
+  tags: TagId[];
+  favorite: boolean;
+  wishlist: boolean;
+}
+
+/** Tour, die ich sehen kann (eigene, beigetretene oder von Freunden gestartete) */
+export interface VisibleTour {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  name: string;
+  day: string;
+  members: number;
+  joined: boolean;
+}
+
 export interface SocialState {
   loaded: boolean;
   friends: Friend[];
   feed: Activity[];
   requests: CompanionRequest[];
+  friendRatings: FriendRating[];
+  tours: VisibleTour[];
+  /** Katalogeinträge zu den Bewertungen der Freunde */
+  friendVenues: Record<string, Venue>;
   /** eigener „Bin unterwegs“-Status */
   goingOutUntil: string | null;
   goingOutPlace: string | null;
@@ -39,7 +66,7 @@ const readSeen = () => {
 };
 
 const empty = (): SocialState => ({
-  loaded: false, friends: [], feed: [], requests: [], goingOutUntil: null, goingOutPlace: null, seenAt: readSeen(), error: null
+  loaded: false, friends: [], feed: [], requests: [], friendRatings: [], tours: [], friendVenues: {}, goingOutUntil: null, goingOutPlace: null, seenAt: readSeen(), error: null
 });
 
 let state: SocialState = empty();
@@ -102,12 +129,13 @@ export function refreshSocial(): Promise<void> {
     const uid = me();
     if (!uid) return;
     try {
-      const [fs, settings, outs, acts, reqs] = await Promise.all([
+      const [fs, settings, outs, acts, reqs, tourRows] = await Promise.all([
         supabase.from('friendships').select('requester, addressee, status'),
         supabase.from('friend_settings').select('friend, notify_entries, notify_going_out'),
         supabase.from('going_out').select('user_id, until, place'),
-        supabase.from('activities').select('id, actor, type, venue_id, venue_name, city, rating, photo_id, created_at').order('created_at', { ascending: false }).limit(60),
-        supabase.rpc('my_companion_requests')
+        supabase.from('activities').select('id, actor, type, venue_id, venue_name, city, rating, photo_id, tour_id, created_at').order('created_at', { ascending: false }).limit(60),
+        supabase.rpc('my_companion_requests'),
+        supabase.rpc('visible_tours')
       ]);
       const ships = check(fs) as { requester: string; addressee: string; status: string }[];
       const ids = ships.map((f) => (f.requester === uid ? f.addressee : f.requester));
@@ -137,7 +165,7 @@ export function refreshSocial(): Promise<void> {
 
       const feed: Activity[] = (check(acts) as any[]).map((a) => ({
         id: a.id, actorId: a.actor, type: a.type, venueId: a.venue_id, venueName: a.venue_name, city: a.city,
-        rating: a.rating, photoId: a.photo_id, createdAt: a.created_at
+        rating: a.rating, photoId: a.photo_id, tourId: a.tour_id, createdAt: a.created_at
       }));
 
       const rawReqs = (check(reqs) as any[]) ?? [];
@@ -152,9 +180,26 @@ export function refreshSocial(): Promise<void> {
         }))
         .sort((a, b) => b.visitedAt.localeCompare(a.visitedAt));
 
+      let friendRatings: FriendRating[] = [];
+      const friendVenues: Record<string, Venue> = { ...state.friendVenues };
+      if (friends.some((f) => f.status === 'accepted')) {
+        friendRatings = ((check(await supabase.rpc('friend_user_venues')) as any[]) ?? []).map((r) => ({
+          userId: r.user_id, venueId: r.venue_id, rating: r.rating, tags: r.tags ?? [], favorite: r.favorite, wishlist: r.wishlist
+        }));
+        const missing = [...new Set(friendRatings.map((r) => r.venueId))].filter((id) => !friendVenues[id]);
+        for (let i = 0; i < missing.length; i += 100) {
+          const rows = check(await supabase.from('venues').select('*').in('id', missing.slice(i, i + 100))) as any[];
+          rows.forEach((row) => (friendVenues[row.id] = venueFromRow(row)));
+        }
+      }
+
+      const tours: VisibleTour[] = ((check(tourRows) as any[]) ?? [])
+        .map((t) => ({ id: t.id, ownerId: t.owner_id, ownerName: t.owner_name, name: t.name, day: t.day, members: t.members, joined: t.joined }))
+        .sort((a, b) => b.day.localeCompare(a.day));
+
       const mine = oById.get(uid);
       set({
-        loaded: true, friends, feed, requests, error: null,
+        loaded: true, friends, feed, requests, friendRatings, friendVenues, tours, error: null,
         goingOutUntil: isLive(mine?.until) ? mine.until : null,
         goingOutPlace: isLive(mine?.until) ? mine.place : null
       });
@@ -238,4 +283,75 @@ export async function sharedPhotoUrl(photoId: string): Promise<string | null> {
   }
   sharedUrlCache.set(photoId, url);
   return url;
+}
+
+/** Zusammenfassung der Freundes-Angaben zu einer Location */
+export interface FriendSummary {
+  venueId: string;
+  entries: (FriendRating & { name: string; color: string })[];
+  avg: number | null;
+  tags: TagId[];
+}
+
+export function summarizeFriends(s: SocialState): Map<string, FriendSummary> {
+  const names = new Map(s.friends.filter((f) => f.status === 'accepted').map((f) => [f.id, f]));
+  const out = new Map<string, FriendSummary>();
+  for (const r of s.friendRatings) {
+    const f = names.get(r.userId);
+    if (!f) continue;
+    const sum = out.get(r.venueId) ?? { venueId: r.venueId, entries: [], avg: null, tags: [] };
+    sum.entries.push({ ...r, name: f.displayName, color: f.avatarColor });
+    out.set(r.venueId, sum);
+  }
+  for (const sum of out.values()) {
+    const rated = sum.entries.filter((e) => e.rating !== null);
+    sum.avg = rated.length ? rated.reduce((a, e) => a + e.rating!, 0) / rated.length : null;
+    sum.tags = [...new Set(sum.entries.flatMap((e) => e.tags))];
+  }
+  return out;
+}
+
+let summaryCache: { ratings: FriendRating[]; friends: Friend[]; out: Map<string, FriendSummary> } | null = null;
+/** Stabile Referenz für React */
+export function friendSummaries(s: SocialState): Map<string, FriendSummary> {
+  if (summaryCache && summaryCache.ratings === s.friendRatings && summaryCache.friends === s.friends) return summaryCache.out;
+  const out = summarizeFriends(s);
+  summaryCache = { ratings: s.friendRatings, friends: s.friends, out };
+  return out;
+}
+
+/** Einer Tour eines Freundes beitreten; eigene Besuche dieses Abends werden ihr zugeordnet */
+export async function joinTour(t: VisibleTour) {
+  check(await supabase.from('tour_members').insert({ tour_id: t.id, user_id: me() }));
+  const tour: Tour = { id: t.id, ownerId: t.ownerId, name: t.name, day: t.day, createdAt: new Date().toISOString() };
+  await rememberTour(tour);
+  await moveVisitsToTour(t.day, t.id);
+  await refreshSocial();
+}
+
+/** Tour eines Freundes verlassen; die eigenen Besuche bleiben erhalten, nur ohne Tour */
+export async function leaveTour(t: { id: string; day: string }) {
+  check(await supabase.from('tour_members').delete().eq('tour_id', t.id).eq('user_id', me()));
+  const night = getStore().visits.filter((v) => v.tourId === t.id);
+  await rememberTour(null, t.id);
+  if (night.length) await moveVisitsToTour(t.day, null);
+  await refreshSocial();
+}
+
+/** Stationen einer Tour aller Teilnehmer (nur online; ohne private Angaben) */
+export interface TourStop {
+  visitId: string;
+  userId: string;
+  name: string;
+  venueId: string;
+  visitedAt: string;
+  rating: number | null;
+}
+export async function fetchTourStops(tourId: string): Promise<{ stops: TourStop[]; venues: Record<string, Venue> }> {
+  const rows = (check(await supabase.rpc('tour_visits', { p_tour: tourId })) as any[]) ?? [];
+  const stops: TourStop[] = rows.map((r) => ({ visitId: r.id, userId: r.user_id, name: r.display_name, venueId: r.venue_id, visitedAt: r.visited_at, rating: r.rating }));
+  const ids = [...new Set(stops.map((x) => x.venueId))];
+  const venues: Record<string, Venue> = {};
+  if (ids.length) (check(await supabase.from('venues').select('*').in('id', ids)) as any[]).forEach((v) => (venues[v.id] = venueFromRow(v)));
+  return { stops: stops.sort((a, b) => a.visitedAt.localeCompare(b.visitedAt)), venues };
 }
