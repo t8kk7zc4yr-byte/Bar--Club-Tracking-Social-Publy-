@@ -9,9 +9,9 @@
 | 2 | Check-in und Locations: Standortvorschlag, OpenStreetMap, Bewertung, Tags, Getränke, Ausgaben, Begleitung, Fotos | offen |
 | 3 | Karte, Ranking, Location-Detail | offen |
 | 4 | Dashboard, Diagramm-Baukasten, Meilensteine | abgeschlossen |
-| 5 | Freunde, Feed, „Bin unterwegs“, Markieren mit Zustimmung, Push; danach Test auf den iPhones | gebaut; Zugriffsregeln per Testskript geprüft (alles OK); Push gebaut, Einrichtung in Supabase und Test auf dem iPhone offen (docs/PUSH-EINRICHTEN.md) |
-| 6 | Freunde-Empfehlungen, Kneipentour, Jahresrückblick zum Teilen | gebaut und im Browser geprüft; Beitreten mit echtem zweiten Konto offen |
-| 7 | Kontolöschung, Datenexport, Rechtstexte als Entwurf, Testplan | Export, Kontolöschung, Budget gebaut; Löschung per Testskript geprüft; Rechtstexte weiter Entwurf; Testplan offen |
+| 5 | Freunde, Feed, „Bin unterwegs“, Markieren mit Zustimmung, Push; danach Test auf den iPhones | abgeschlossen; Push auf dem iPhone bestätigt |
+| 6 | Freunde-Empfehlungen, Kneipentour, Jahresrückblick zum Teilen | abgeschlossen; Beitreten zu Touren mit zweitem Konto noch zu testen |
+| 7 | Kontolöschung, Datenexport, Rechtstexte als Entwurf, Testplan | Export, Löschung, Budget, Testplan fertig; Rechtstexte weiter Entwurf |
 
 ## Später
 
