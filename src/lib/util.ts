@@ -20,7 +20,12 @@ export function relTime(iso: string): string {
   if (diff < 60) return 'gerade eben';
   if (diff < 3600) return `vor ${Math.floor(diff / 60)} Min.`;
   if (diff < 86400) return `vor ${Math.floor(diff / 3600)} Std.`;
-  const days = Math.floor(diff / 86400);
+  const d = new Date(iso);
+  const today = new Date();
+  const days = Math.round(
+    (new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() - new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86400000
+  );
+  if (days === 0) return `vor ${Math.floor(diff / 3600)} Std.`;
   if (days === 1) return 'gestern';
   if (days < 7) return `vor ${days} Tagen`;
   return fmtDate(iso);

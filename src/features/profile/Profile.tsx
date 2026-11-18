@@ -153,12 +153,6 @@ export default function Profile() {
       </div>
 
       <div className="section">
-        <div className="card" style={{ display: 'grid', gap: 8 }}>
-          <button className="btn" onClick={() => { if (pending === 0 || confirm('Es gibt noch nicht übertragene Änderungen. Beim Abmelden gehen sie verloren. Trotzdem abmelden?')) signOut(); }}>Abmelden</button>
-        </div>
-      </div>
-
-      <div className="section">
         <div className="section-h"><h2>💶 Budget</h2></div>
         <div className="card">
           <label className="field" style={{ marginBottom: 6 }}>
@@ -184,6 +178,12 @@ export default function Profile() {
           <button className="btn" disabled={!!exportMsg} onClick={doExport}>{exportMsg ?? '⬇️ Alle Daten exportieren (JSON, mit Fotos)'}</button>
           <button className="btn danger" onClick={() => setDeleting(true)}>🗑️ Konto und alle Daten löschen …</button>
           <div className="small muted">Der Export enthält alles, was zu deinem Konto gespeichert ist. Die Löschung entfernt dein Konto unwiderruflich.</div>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="card" style={{ display: 'grid', gap: 8 }}>
+          <button className="btn" onClick={() => { if (pending === 0 || confirm('Es gibt noch nicht übertragene Änderungen. Beim Abmelden gehen sie verloren. Trotzdem abmelden?')) signOut(); }}>Abmelden</button>
         </div>
       </div>
 

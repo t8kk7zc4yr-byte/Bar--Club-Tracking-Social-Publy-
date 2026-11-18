@@ -100,3 +100,14 @@ describe('Meilensteine', () => {
     expect(milestones([], [], 0).some((m) => /getränk|drink|bier/i.test(m.desc + m.id))).toBe(false);
   });
 });
+
+describe('Ausgehtag', () => {
+  it('rechnet Besuche nach Mitternacht dem Vorabend zu', () => {
+    // Samstag 14.11.2026, 23 Uhr und Sonntag 15.11.2026, 2 Uhr gehören beide zum Samstagabend
+    const venues = [venue('a', 'bar', 'Köln', 8)];
+    const visits = [visit('1', 'a', new Date(2026, 10, 14, 23)), visit('2', 'a', new Date(2026, 10, 15, 2))];
+    const d = computeDashboard(venues, visits, 2026, new Date(2026, 10, 16, 12));
+    expect(d.topWeekday).toBe('Sa');
+    expect(d.perWeekday.find((w) => w.label === 'Sa')!.visits).toBe(2);
+  });
+});

@@ -123,7 +123,8 @@ export function computeDashboard<V extends StatVenue>(venues: V[], visits: Visit
   });
 
   const perWeekday = WEEKDAYS_SHORT.map((label) => ({ label, visits: 0 }));
-  yearVisits.forEach((v) => perWeekday[weekdayIndex(new Date(v.visitedAt))].visits++);
+  // Der Ausgehtag ist der Abend: Besuche bis 6 Uhr morgens zählen zum Vortag
+  yearVisits.forEach((v) => perWeekday[weekdayIndex(new Date(new Date(v.visitedAt).getTime() - 6 * 3600 * 1000))].visits++);
   const topWd = [...perWeekday].sort((a, b) => b.visits - a.visits)[0];
 
   const perHour = EVENING_HOURS.map((h) => ({ label: `${h}`, visits: 0 }));
