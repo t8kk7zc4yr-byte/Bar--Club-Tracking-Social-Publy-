@@ -16,13 +16,13 @@ Diese Liste ist eine Arbeitshilfe und ersetzt keine Rechtsberatung.
 
 * [ ] Auftragsverarbeitungsvertrag mit Supabase abschließen, Unterauftragsverarbeiter prüfen (Art. 28 DSGVO)
 * [ ] Verantwortliche festlegen: gemeinsam (Art. 26 DSGVO) oder GbR
-* [ ] Datenschutzhinweise und Impressum ausfüllen (§ 5 DDG, § 18 MStV)
+* [ ] Datenschutzhinweise und Impressum ausfüllen (§ 5 DDG, § 18 MStV): Entwürfe in `src/legal/`, offene Stellen sind mit [[ ]] markiert, Quellen in `docs/RECHT-QUELLEN.md`
 * [ ] Hinweis auf Datenübermittlung an OpenStreetMap-Dienste (Kacheln, Overpass, Nominatim) und Photon (Komoot) aufnehmen
 * [ ] Hinweis auf Push-Dienste (Apple, Google) aufnehmen; in den In-App-Datenschutzhinweisen als Entwurf enthalten
 
 ## Vor einem Launch
 
-* [ ] Einordnung der Getränkeangaben prüfen (mögliche Nähe zu Gesundheitsdaten, Art. 9 DSGVO)
+* [ ] Einordnung der Getränkeangaben prüfen (mögliche Nähe zu Gesundheitsdaten, Art. 9 DSGVO); falls ja, ausdrückliche Einwilligung in der App einbauen
 * [ ] Eigenen Kachelanbieter und eigenen Mailversand einrichten
 * [ ] Löschkonzept für inaktive Konten
 * [ ] Meldeweg für Inhalte (Fotos, Texte)

@@ -1,75 +1,51 @@
-import { APP } from '../../config/app';
+import { Fragment, type ReactNode } from 'react';
 import { Header } from '../../components/ui';
+import datenschutz from '../../legal/datenschutz.md?raw';
+import impressum from '../../legal/impressum.md?raw';
 
-/** Solange true, werden die Texte als Entwurf gekennzeichnet. Vor einer Weitergabe an Dritte ausfüllen. */
-const IS_DRAFT = true;
+/**
+ * Rechtstexte. Quelle sind die Markdown-Dateien in src/legal/ (dieselben Dateien dienen als Vorlage zum Bearbeiten).
+ * Platzhalter in doppelten eckigen Klammern [[ ]] werden gelb hervorgehoben; solange es welche gibt, gilt der Text als Entwurf.
+ */
+const TEXTS = { datenschutz, impressum } as const;
 
-export default function Legal({ doc }: { doc: 'datenschutz' | 'impressum' }) {
+function inline(text: string): ReactNode[] {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[\[[^\]]+\]\]|\[[^\]]+\]\(https?:\/\/[^)]+\))/g);
+  return parts.map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**')) return <b key={i}>{p.slice(2, -2)}</b>;
+    if (p.startsWith('[[') && p.endsWith(']]')) return <span key={i} className="ph">{p.slice(2, -2)}</span>;
+    const link = /^\[([^\]]+)\]\((https?:\/\/[^)]+)\)$/.exec(p);
+    if (link) return <a key={i} href={link[2]} target="_blank" rel="noreferrer">{link[1]}</a>;
+    return <Fragment key={i}>{p}</Fragment>;
+  });
+}
+
+/** Kleiner Markdown-Leser für Überschriften, Absätze und Aufzählungen */
+function render(md: string): ReactNode[] {
+  return md
+    .trim()
+    .split(/\n\s*\n/)
+    .map((block, i) => {
+      const lines = block.split('\n');
+      if (lines[0].startsWith('## ')) return <h2 key={i}>{inline(lines[0].slice(3))}</h2>;
+      if (lines.every((l) => l.startsWith('* '))) return <ul key={i}>{lines.map((l, j) => <li key={j}>{inline(l.slice(2))}</li>)}</ul>;
+      return <p key={i}>{inline(lines.join(' '))}</p>;
+    });
+}
+
+export const openPoints = (doc: keyof typeof TEXTS) => (TEXTS[doc].match(/\[\[/g) ?? []).length;
+
+export default function Legal({ doc }: { doc: keyof typeof TEXTS }) {
+  const open = openPoints(doc);
   return (
     <div className="page no-tabbar legal-body">
       <Header back title={doc === 'datenschutz' ? 'Datenschutzhinweise' : 'Impressum'} />
-      {IS_DRAFT && (
+      {open > 0 && (
         <div className="draft-banner">
-          <b>Entwurf für den internen Test.</b> Dieser Text ist noch nicht vollständig und nicht rechtlich geprüft. Angaben in eckigen Klammern fehlen noch.
+          <b>Entwurf für den internen Test.</b> Der Text ist nicht rechtlich geprüft; {open} gelb markierte {open === 1 ? 'Angabe fehlt' : 'Angaben fehlen'} noch.
         </div>
       )}
-      {doc === 'datenschutz' ? <Privacy /> : <Imprint />}
+      {render(TEXTS[doc])}
     </div>
-  );
-}
-
-function Privacy() {
-  return (
-    <>
-      <h2>1. Verantwortliche</h2>
-      <p>[Namen und Anschrift der Verantwortlichen, Kontakt-E-Mail]</p>
-
-      <h2>2. Welche Daten verarbeitet werden</h2>
-      <ul>
-        <li>Konto: E-Mail-Adresse, Passwort (nur als Prüfwert gespeichert), Anzeigename, Freundescode, Zeitpunkt der Bestätigung der Volljährigkeit. Das Geburtsdatum wird nur im Formular geprüft und nicht gespeichert.</li>
-        <li>Inhalte: besuchte Locations, Zeitpunkte der Besuche, Bewertungen, Tags, Notizen, Getränke, Ausgaben, Begleitung, Fotos.</li>
-        <li>Freunde: Freundschaften, Benachrichtigungseinstellungen, der Status „Bin unterwegs“, Markierungen.</li>
-        <li>Standort: nur im Moment des Check-ins oder beim Öffnen der Karte, um Locations in der Nähe vorzuschlagen. Es findet keine laufende Ortung statt; ein Bewegungsverlauf wird nicht gespeichert.</li>
-      </ul>
-
-      <h2>3. Wer was sehen kann</h2>
-      <p>
-        Ohne deine Freigabe sieht niemand außer dir deine Einträge. Schaltest du „Mit Freunden teilen“ ein, sehen bestätigte Freunde Location, Zeitpunkt, Bewertung, Tags und Notiz deiner Besuche.
-        Getränke, Ausgaben und frei eingetragene Begleitpersonen sind für andere nie sichtbar. Fotos sind privat, bis du ein Foto einzeln freigibst. Eine Markierung als Begleitung wird erst wirksam, wenn die markierte Person zustimmt.
-      </p>
-
-      <h2>4. Empfänger und Dienstleister</h2>
-      <ul>
-        <li>Hosting der Datenbank, Anmeldung und Fotos: Supabase, Serverstandort Frankfurt am Main. [Angaben zum Auftragsverarbeitungsvertrag]</li>
-        <li>Auslieferung der App: GitHub Pages. [Angaben ergänzen]</li>
-        <li>Karten und Ortssuche: Kartenkacheln und Suche des OpenStreetMap-Projekts sowie der Suchdienst Photon (Komoot) für Locations in der Nähe. Beim Laden der Karte und bei der Suche werden IP-Adresse und der angefragte Kartenausschnitt bzw. Suchbegriff übertragen.</li>
-        <li>Push-Benachrichtigungen (nur wenn du sie einschaltest): Zustellung über den Push-Dienst deines Geräts bzw. Browsers (Apple oder Google). Der Inhalt ist Ende-zu-Ende verschlüsselt; der Dienst erhält eine Gerätekennung und den Zeitpunkt der Zustellung.</li>
-      </ul>
-      <p>Es werden keine Analyse- oder Werbedienste eingesetzt.</p>
-
-      <h2>5. Rechtsgrundlagen und Speicherdauer</h2>
-      <p>[Rechtsgrundlagen nach Art. 6 DSGVO, Speicherdauer, Löschung inaktiver Konten]</p>
-
-      <h2>6. Deine Rechte</h2>
-      <p>
-        Du kannst Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit und Widerspruch verlangen und dich bei einer Aufsichtsbehörde beschweren.
-        Die Löschung des Kontos mit allen Daten und der Export deiner Daten werden im Profil bereitgestellt; bis dahin genügt eine Nachricht an die oben genannte Adresse.
-      </p>
-    </>
-  );
-}
-
-function Imprint() {
-  return (
-    <>
-      <h2>Angaben gemäß § 5 DDG</h2>
-      <p>[Namen der Anbieter, ladungsfähige Anschrift]</p>
-      <h2>Kontakt</h2>
-      <p>[E-Mail-Adresse, weitere schnelle Kontaktmöglichkeit]</p>
-      <h2>Verantwortlich für den Inhalt</h2>
-      <p>[Name und Anschrift nach § 18 Abs. 2 MStV]</p>
-      <h2>Hinweis</h2>
-      <p>{APP.name} befindet sich in einer geschlossenen Testphase und ist nur mit Einladungscode zugänglich.</p>
-    </>
   );
 }
