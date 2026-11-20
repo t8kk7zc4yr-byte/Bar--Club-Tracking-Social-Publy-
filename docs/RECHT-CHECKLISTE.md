@@ -11,6 +11,16 @@ Festgehalten am 20.11.2026 auf Wunsch von Till; vor der Weitergabe an Freunde zu
 * [ ] **Löschung inaktiver Konten:** Frist festlegen (Vorschlag im Entwurf: 24 Monate ohne Anmeldung, mit Vorwarnung per E-Mail) und technisch umsetzen.
 * [ ] **Impressumspflicht:** klären, ob sie schon für die geschlossene, unentgeltliche Testphase besteht (§ 5 DDG). Empfehlung: Impressum trotzdem ausfüllen.
 
+## Import von Locations aus OpenStreetMap
+
+Festgehalten am 20.11.2026 auf Wunsch von Till. Gilt für den Katalog aus OpenStreetMap (ganz Deutschland). Selbst angelegte Locations bleiben vorerst getrennt und sind nur für die anlegende Person und ihre Freunde sichtbar.
+
+* [ ] **OpenStreetMap-Lizenz (ODbL):** Namensnennung „© OpenStreetMap-Mitwirkende“ sichtbar halten. Wird der Katalog mit eigenen Daten vermischt und öffentlich genutzt, ist er auf Anfrage ebenfalls unter der ODbL bereitzustellen (Share-Alike). Bewertungen, Besuche und persönliche Daten liegen in eigenen Tabellen; nach den Leitlinien der OpenStreetMap Foundation zu „Collective Databases“ dürften sie nicht darunter fallen. Vor einem Launch von jemandem mit ODbL-Erfahrung prüfen lassen.
+* [ ] **Markenrecht:** Namen von Bars und Clubs nur zur Bezeichnung des jeweiligen Betriebs verwenden (§ 23 MarkenG, anständige Gepflogenheiten). Keine Logos oder Fotos der Betreiber übernehmen, keinen Anschein einer Partnerschaft oder eines Gütesiegels erwecken.
+* [ ] **Bewertungen:** Solange sie nur für die bewertende Person und bestätigte Freunde sichtbar sind, gering riskant. Ein öffentlicher Durchschnitt je Location würde die App zum Bewertungsportal machen (Meldeweg für Betreiber, Digital Services Act, BGH-Rechtsprechung zu Bewertungsportalen). In der App ist kenntlich gemacht, dass Bewertungen von Nutzerinnen und Nutzern stammen.
+* [ ] **Keine anderen Quellen:** Keine Daten aus Google Maps oder Branchenverzeichnissen übernehmen (Nutzungsbedingungen, Schutzrecht des Datenbankherstellers nach § 87b UrhG). OpenStreetMap ist zur Nachnutzung lizenziert.
+* [ ] **Datenschutz:** Namen mancher Betriebe enthalten Personennamen; es handelt sich um öffentlich zugängliche Geschäftsdaten. Die Datenschutzerklärung nennt OpenStreetMap als Quelle des Katalogs.
+
 ## In der App technisch vorgesehen
 
 * Altersangabe per Geburtsdatum ab 18; gespeichert wird nur der Zeitpunkt der Bestätigung
