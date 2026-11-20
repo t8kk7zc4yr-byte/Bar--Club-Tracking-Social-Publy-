@@ -115,7 +115,7 @@ export default function VenueDetail() {
         </button>
       </div>
       <div className="small mt8" style={{ color: tierFor(venue.rating).key === 'none' ? 'var(--muted)' : 'var(--text)' }}>
-        {venue.wishlist ? '📌 Auf deiner Wunschliste' : tierFor(venue.rating).label}
+        {venue.wishlist ? '📌 Auf deiner Wunschliste' : venue.rating === null ? 'Noch nicht von dir bewertet' : `Deine Bewertung: ${tierFor(venue.rating).label}`}
         <span className="muted"> · tippe auf die Zahl zum Ändern</span>
       </div>
       {editRating && (

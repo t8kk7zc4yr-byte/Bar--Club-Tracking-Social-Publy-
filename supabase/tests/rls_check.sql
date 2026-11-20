@@ -20,6 +20,8 @@ declare
   code_b text;
   code_a text;
   v_venue uuid;
+  v_private uuid;
+  v_osm uuid;
   v_visit uuid;
   v_photo_private uuid;
   v_photo_shared uuid;
@@ -98,6 +100,16 @@ begin
     returning id into v_photo_shared;
     insert into public.going_out (until, place) values (now() + interval '4 hours', 'Altstadt');
 
+    -- Eigene Location (ohne OpenStreetMap-Kennung) und eine aus dem Katalog
+    v_private := public.upsert_venue(null, 'Annas Geheimtipp', 'bar', 'Köln', null, 50.91, 6.91, null);
+    v_osm := public.upsert_venue(null, 'Katalog-Kneipe Probe', 'kneipe', 'Köln', null, 50.92, 6.92, 'node/999999999999');
+    begin
+      update public.venues set source = 'osm', active = false where id = v_private;
+      r := r || 'FEHLER Anna konnte Quelle oder Status einer Location ändern'::text;
+    exception when others then
+      r := r || 'OK    Quelle und Status einer Location kann niemand aus der App ändern'::text;
+    end;
+
     -- Markieren: Ben (Freund) ja, Clara (fremd) nein
     insert into public.visit_companions (visit_id, user_id) values (v_visit, b);
     begin
@@ -116,6 +128,8 @@ begin
     perform set_config('request.jwt.claim.sub', b::text, true);
     select count(*) into n from public.visits where user_id = a;
     r := r || (case when n = 0 then 'OK    ' else 'FEHLER ' end || 'Ben liest Annas Besuche nicht direkt aus der Tabelle (mit Getränken und Ausgaben)');
+    select count(*) into n from public.venues where id in (v_private, v_osm);
+    r := r || (case when n = 2 then 'OK    ' else 'FEHLER ' end || 'Ben sieht Annas eigene Location und den Katalogeintrag');
     select count(*) into n from public.friend_visits(a) where note = 'Guter Abend' and rating = 8;
     r := r || (case when n = 1 then 'OK    ' else 'FEHLER ' end || 'Ben sieht Annas Besuch (Ort, Zeit, Bewertung, Notiz)');
     select array_to_string(proargnames, ',') into t from pg_proc
@@ -150,6 +164,10 @@ begin
          + (select count(*) from public.visible_tours() where owner_id = a) + (select count(*) from public.tour_visits(v_tour))
       into n;
     r := r || (case when n = 0 then 'OK    ' else 'FEHLER ' end || 'Clara (keine Freundin) sieht nichts von Anna (' || n || ' Treffer)');
+    select count(*) into n from public.venues where id = v_private;
+    r := r || (case when n = 0 then 'OK    ' else 'FEHLER ' end || 'Clara sieht Annas selbst angelegte Location nicht');
+    select count(*) into n from public.venues where id = v_osm;
+    r := r || (case when n = 1 then 'OK    ' else 'FEHLER ' end || 'Clara sieht Katalogeinträge aus OpenStreetMap');
     begin
       insert into public.tour_members (tour_id) values (v_tour);
       r := r || 'FEHLER Clara konnte Annas Tour beitreten'::text;

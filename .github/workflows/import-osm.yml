@@ -1,0 +1,55 @@
+name: Locations aus OpenStreetMap importieren
+
+# Lädt monatlich den Deutschland-Auszug von Geofabrik, filtert Bars, Kneipen, Clubs und Biergärten
+# und schreibt sie in den Katalog (scripts/import_osm.py). Daten: © OpenStreetMap-Mitwirkende, ODbL.
+#
+# Benötigt im Repository unter Settings > Secrets and variables > Actions:
+#   Variable  VITE_SUPABASE_URL           (gibt es bereits)
+#   Secret    SUPABASE_SERVICE_ROLE_KEY   (geheimer Schlüssel aus Supabase, Project Settings > API Keys)
+
+on:
+  schedule:
+    # am 3. jedes Monats um 4:30 Uhr UTC
+    - cron: '30 4 3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: import-osm
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Werkzeuge installieren
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq osmium-tool
+          python3 -m pip install --quiet osmium
+
+      - name: Deutschland-Auszug laden
+        run: |
+          curl -sSfL -A "social-publy-import (monatlich, github.com/t8kk7zc4yr-byte/Bar--Club-Tracking-Social-Publy-)" \
+            -o germany.osm.pbf https://download.geofabrik.de/europe/germany/germany-latest.osm.pbf
+          ls -lh germany.osm.pbf
+
+      - name: Auf Bars und Orte filtern
+        run: |
+          osmium tags-filter germany.osm.pbf \
+            nw/amenity=bar,pub,nightclub,biergarten,hookah_lounge \
+            n/place=city,town,village \
+            -o filtered.osm.pbf --overwrite
+          ls -lh filtered.osm.pbf
+          rm germany.osm.pbf
+
+      - name: In den Katalog schreiben
+        env:
+          SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/import_osm.py filtered.osm.pbf --upload

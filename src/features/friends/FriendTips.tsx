@@ -94,7 +94,7 @@ export function FriendsOnVenue({ venueId }: { venueId: string }) {
   return (
     <div className="section">
       <div className="section-h">
-        <h2>👥 Deine Freunde</h2>
+        <h2>👥 Bewertungen deiner Freunde</h2>
         {summary.avg !== null && <span className="small muted">Ø {fmtRating(Math.round(summary.avg * 10) / 10)}</span>}
       </div>
       <div className="card" style={{ padding: '2px 14px' }}>
@@ -111,6 +111,7 @@ export function FriendsOnVenue({ venueId }: { venueId: string }) {
           </div>
         ))}
       </div>
+      <div className="small muted mt8">Persönliche Einschätzungen deiner Freunde, keine Bewertung durch Social Publy.</div>
     </div>
   );
 }

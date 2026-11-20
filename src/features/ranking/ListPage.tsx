@@ -150,7 +150,7 @@ export default function ListPage() {
         </div>
       )}
 
-      <div style={{ margin: '12px 2px' }}><RatingLegend /></div>
+      <div style={{ margin: '12px 2px' }}><RatingLegend note /></div>
 
       {list.length ? (
         list.map(({ s, dist }, i) => (

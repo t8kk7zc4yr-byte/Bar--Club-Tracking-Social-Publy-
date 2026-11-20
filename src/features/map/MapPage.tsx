@@ -1,9 +1,11 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type L from 'leaflet';
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
-import { clusterIcon, FitBounds, FlyTo, meIcon, Tiles, useFit, venueIcon, ZoomWatcher } from '../../components/MapBits';
+import { BoundsWatcher, catalogIcon, clusterIcon, FitBounds, FlyTo, meIcon, Tiles, useFit, venueIcon, ZoomWatcher } from '../../components/MapBits';
 import { RatingBadge, TagList, TagPicker } from '../../components/ui';
-import { myVenues, useStore, type VenueView } from '../../data/store';
+import { catalogInBox } from '../../data/osm';
+import { adoptVenue, myVenues, toView, useStore, type VenueView } from '../../data/store';
 import { toast } from '../../lib/notify';
 import { CATEGORIES, categoryInfo, SPORT_TAGS, type CategoryId, type TagId } from '../../lib/tags';
 import { getPosition } from '../../lib/util';
@@ -11,6 +13,9 @@ import { venueStats } from '../../lib/venueStats';
 
 type Filter = 'all' | 'fav' | 'wish' | 'sport' | CategoryId;
 type Located = VenueView & { lat: number; lng: number };
+
+/** Ab dieser Zoomstufe zeigt die Karte alle Bars und Clubs im Ausschnitt */
+const CATALOG_ZOOM = 13;
 
 /** Einfaches Pixel-Clustering: Locations, die beim aktuellen Zoom weniger als 56 px auseinander liegen, werden zusammengefasst */
 function Clusters({ venues, zoom, renderPin }: { venues: Located[]; zoom: number; renderPin: (v: Located) => ReactNode }) {
@@ -59,6 +64,51 @@ export default function MapPage() {
   const [me, setMe] = useState<[number, number] | null>(null);
   const [zoom, setZoom] = useState(6);
   const stats = useMemo(() => venueStats(venues, visits), [venues, visits]);
+  const [showAll, setShowAll] = useState(true);
+  const [view, setView] = useState<{ bounds: L.LatLngBounds; zoom: number } | null>(null);
+  const [catalog, setCatalog] = useState<Located[]>([]);
+  const [capped, setCapped] = useState(false);
+  const [catalogError, setCatalogError] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  // Katalog nur bei allgemeinen Filtern zeigen; Favoriten, Wunschliste, Sport und Tags sind persönliche Angaben
+  const catalogFilterOk = !tags.length && filter !== 'fav' && filter !== 'wish' && filter !== 'sport';
+  const catalogActive = showAll && catalogFilterOk && !!view && view.zoom >= CATALOG_ZOOM;
+
+  useEffect(() => {
+    clearTimeout(timer.current);
+    if (!catalogActive || !view) {
+      setCatalog([]);
+      return;
+    }
+    const b = view.bounds.pad(0.15);
+    timer.current = window.setTimeout(() => {
+      catalogInBox({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() })
+        .then((r) => {
+          setCatalogError(false);
+          setCapped(r.capped);
+          setCatalog(r.venues.filter((v): v is typeof v & { lat: number; lng: number } => v.lat != null && v.lng != null).map((v) => toView(v) as Located));
+        })
+        .catch(() => setCatalogError(true));
+    }, 350);
+    return () => clearTimeout(timer.current);
+  }, [catalogActive, view]);
+
+  const ownIds = useMemo(() => new Set(venues.map((v) => v.id)), [venues]);
+  const catalogShown = useMemo(
+    () => catalog.filter((v) => !ownIds.has(v.id) && (filter === 'all' || v.category === filter)),
+    [catalog, ownIds, filter]
+  );
+
+  const open = async (v: Located, action: 'checkin' | 'wish' | 'details') => {
+    if (action === 'wish') {
+      await adoptVenue(v, { wishlist: true });
+      toast('📌 Auf deiner Wunschliste');
+      return;
+    }
+    await adoptVenue(v, null);
+    nav(action === 'checkin' ? `/checkin?venue=${v.id}` : `/location/${v.id}`);
+  };
 
   const shown = useMemo(
     () =>
@@ -93,6 +143,7 @@ export default function MapPage() {
         <FitBounds points={points} />
         <FlyTo target={me} />
         <ZoomWatcher onZoom={setZoom} />
+        <BoundsWatcher onChange={(bounds, z) => setView({ bounds, zoom: z })} />
         {me && <Marker position={me} icon={meIcon} />}
         <Clusters
           venues={shown}
@@ -122,6 +173,32 @@ export default function MapPage() {
             );
           }}
         />
+        {catalogShown.length > 0 && (
+          <Clusters
+            venues={catalogShown}
+            zoom={zoom}
+            renderPin={(v) => {
+              const cat = categoryInfo(v.category);
+              return (
+                <Marker key={v.id} position={[v.lat, v.lng]} icon={catalogIcon(cat.emoji)}>
+                  <Popup>
+                    <div style={{ minWidth: 190 }}>
+                      <div style={{ fontWeight: 700, fontSize: 15 }}>{v.name}</div>
+                      <div className="small muted">{cat.emoji} {cat.label}{v.city ? ` · ${v.city}` : ''}</div>
+                      {v.address && <div className="small muted">{v.address}</div>}
+                      <div className="small muted mt8">Noch nicht von dir besucht</div>
+                      <div className="btn-row mt12">
+                        <button className="btn sm" onClick={() => open(v, 'wish')} aria-label={`${v.name} auf die Wunschliste`}>📌</button>
+                        <button className="btn sm" onClick={() => open(v, 'details')}>Details</button>
+                        <button className="btn sm primary" onClick={() => open(v, 'checkin')}>Check-in</button>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            }}
+          />
+        )}
       </MapContainer>
 
       <div className="map-overlay">
@@ -145,10 +222,23 @@ export default function MapPage() {
             </div>
           </div>
         )}
-        <div className="map-count mt8">
-          {shown.length} {shown.length === 1 ? 'Location' : 'Locations'} auf der Karte
-          {noPin > 0 && filter === 'all' && !tags.length ? ` · ${noPin} ohne Standort` : ''}
+        <div className="flex mt8" style={{ gap: 6, flexWrap: 'wrap' }}>
+          <div className="map-count">
+            {shown.length} {shown.length === 1 ? 'eigene Location' : 'eigene Locations'}
+            {noPin > 0 && filter === 'all' && !tags.length ? ` · ${noPin} ohne Standort` : ''}
+            {catalogActive && catalogShown.length > 0 ? ` · ${catalogShown.length}${capped ? '+' : ''} weitere` : ''}
+          </div>
+          {catalogFilterOk && (
+            <button className={`chip small ${showAll ? 'on' : ''}`} aria-pressed={showAll} onClick={() => setShowAll((x) => !x)} style={{ pointerEvents: 'auto' }}>
+              🍻 Alle Bars
+            </button>
+          )}
         </div>
+        {showAll && catalogFilterOk && view && view.zoom < CATALOG_ZOOM && (
+          <div className="map-count mt8">🔍 Hineinzoomen, um alle Bars und Clubs zu sehen</div>
+        )}
+        {catalogActive && capped && <div className="map-count mt8">Sehr viele Locations: weiter hineinzoomen für alle</div>}
+        {catalogActive && catalogError && <div className="map-count mt8">Weitere Locations konnten nicht geladen werden</div>}
       </div>
       <div className="map-btns">
         <button className="icon-btn" onClick={locate} aria-label="Mein Standort">📍</button>

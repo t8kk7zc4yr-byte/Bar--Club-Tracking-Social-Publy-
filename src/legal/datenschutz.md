@@ -48,7 +48,11 @@ Was du in der App einträgst, speichern wir in deinem Konto, damit du es auf jed
 
 Fotos werden vor dem Hochladen auf deinem Gerät verkleinert und neu gespeichert. Dabei entfallen eingebettete Standort- und Gerätedaten (EXIF). Bitte lade Fotos, auf denen andere Personen zu erkennen sind, nur mit deren Einverständnis hoch.
 
-Locations (Name, Art, Stadt, Adresse, Koordinaten) legen wir in einem gemeinsamen Katalog ab, den alle angemeldeten Nutzerinnen und Nutzer sehen, damit dieselbe Bar nicht mehrfach angelegt wird. Dieser Katalog enthält keinen Hinweis darauf, wer dort war. Wer eine Location angelegt hat, wird intern vermerkt; bei Löschung des Kontos wird dieser Verweis entfernt.
+Die Bars, Kneipen, Clubs und Biergärten in Deutschland, die die App vorschlägt und auf der Karte zeigt, stammen aus OpenStreetMap (© OpenStreetMap-Mitwirkende, Open Database License). Wir übernehmen dort Name, Art, Adresse und Lage und aktualisieren sie monatlich. Manche Betriebe tragen den Namen ihrer Inhaberin oder ihres Inhabers; es handelt sich um öffentlich zugängliche Geschäftsangaben, die wir auf Grundlage unseres berechtigten Interesses an einem vollständigen Verzeichnis verarbeiten (Art. 6 Abs. 1 lit. f DSGVO).
+
+Locations, die du selbst anlegst, sehen nur du, deine bestätigten Freunde und Personen, die sie bereits in ihrer eigenen Liste haben. Wer eine Location angelegt hat, wird intern vermerkt; bei Löschung des Kontos wird dieser Verweis entfernt.
+
+Bewertungen, Tags und Beschreibungen sind persönliche Einschätzungen der jeweiligen Nutzerin oder des jeweiligen Nutzers und nur für sie bzw. ihn und bestätigte Freunde sichtbar. Social Publy selbst bewertet keine Betriebe und veröffentlicht keine Durchschnittswerte.
 
 Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO).
 
@@ -58,7 +62,7 @@ Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DS
 
 Die App fragt deinen Standort nur ab, wenn du eine Funktion nutzt, die ihn braucht: Vorschläge beim Check-in, „Hier bin ich“ beim Anlegen einer Location, „Mein Standort“ auf der Karte und die Sortierung nach Nähe. Vorher fragt dein Gerät um Erlaubnis; du kannst sie jederzeit in den Einstellungen deines Geräts entziehen.
 
-Wir speichern deinen Standort nicht und erstellen keinen Bewegungsverlauf. Gespeichert werden nur die Koordinaten einer Location, wenn du sie anlegst. Um Vorschläge in der Nähe anzuzeigen, wird dein ungefährer Standort an die Ortsdienste aus Abschnitt 8 übermittelt.
+Wir speichern deinen Standort nicht und erstellen keinen Bewegungsverlauf. Gespeichert werden nur die Koordinaten einer Location, wenn du sie anlegst. Vorschläge in der Nähe suchen wir zuerst in unserem eigenen Katalog; nur wenn er für deine Umgebung nichts enthält, etwa im Ausland, wird dein ungefährer Standort an den Suchdienst Photon aus Abschnitt 8 übermittelt.
 
 Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO); den Zugriff auf die Standortfunktion deines Geräts gibst du selbst frei.
 
@@ -93,8 +97,9 @@ Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO; für den Zug
 Für Karten und die Suche nach Locations nutzen wir Dienste auf Grundlage von OpenStreetMap:
 
 * **Kartenkacheln und Adresssuche** (tile.openstreetmap.org, nominatim.openstreetmap.org) der OpenStreetMap Foundation, [[Anschrift prüfen; nach deren Angaben werden Daten im Vereinigten Königreich und in den Niederlanden gespeichert]]. Übermittelt werden deine IP-Adresse, der angefragte Kartenausschnitt bzw. Suchbegriff, die Adresse der App und Angaben zu deinem Browser.
-* **Suche nach Bars und Clubs in der Nähe** über Photon, betrieben von komoot [[vollständige Firmierung und Anschrift prüfen]]. Übermittelt werden deine IP-Adresse und dein ungefährer Standort.
+* **Suche nach Bars und Clubs in der Nähe außerhalb unseres Katalogs** über Photon, betrieben von komoot [[vollständige Firmierung und Anschrift prüfen]]. Nur wenn der Katalog für deine Umgebung nichts enthält, werden deine IP-Adresse und dein ungefährer Standort übermittelt.
 * **Ersatzweise** über die Overpass-Schnittstelle (overpass-api.de) [[Betreiber prüfen]], falls Photon nicht erreichbar ist.
+* **Katalog:** Die Daten für den Katalog laden wir monatlich als Gesamtdatei bei der Geofabrik GmbH, Karlsruhe [[Anschrift prüfen]]. Dabei werden keine Daten von dir übermittelt.
 
 Angezeigte Kartenausschnitte speichert die App bis zu 30 Tage auf deinem Gerät, damit die Karte schneller lädt und weniger Anfragen entstehen.
 

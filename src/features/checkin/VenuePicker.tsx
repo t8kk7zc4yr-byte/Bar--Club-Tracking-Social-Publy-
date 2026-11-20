@@ -46,8 +46,12 @@ export default function VenuePicker() {
       .then((p) => {
         if (!live) return;
         setPos(p);
-        catalogNearby(p).then((v) => live && setCatalog(v));
-        nearbyPlaces(p).then((v) => live && setPlaces(v)).catch(() => {});
+        // Zuerst der eigene Katalog (aus OpenStreetMap importiert); nur wenn er hier nichts kennt, den Suchdienst Photon fragen
+        catalogNearby(p).then((v) => {
+          if (!live) return;
+          setCatalog(v);
+          if (!v.length) nearbyPlaces(p).then((x) => live && setPlaces(x)).catch(() => {});
+        });
         reversePlace(p.lat, p.lng).then((r) => live && r && setPosCity(r.city));
       })
       .catch(() => {})

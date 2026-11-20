@@ -20,6 +20,7 @@ Noch offen: Test aller Abläufe mit zwei echten Konten (`docs/TESTPLAN.md`), aus
 | Push-Benachrichtigungen | fertig, auf dem iPhone bestätigt (Freundschaftsanfrage) |
 | Freunde-Tipps, Kneipentouren, Jahresrückblick | fertig |
 | Datenexport, Kontolöschung, Budget | fertig |
+| Katalog aller Bars und Clubs in Deutschland aus OpenStreetMap, Anzeige auf der Karte | gebaut; Einrichtung und erster Import offen (`docs/KATALOG-IMPORT.md`) |
 | Datenschutzerklärung, Impressum | Entwürfe mit Platzhaltern |
 
 ## Einrichtung
@@ -44,5 +45,6 @@ Bei jedem Stand auf dem Zweig `main` baut `.github/workflows/deploy.yml` die App
 | `src/features/` | Seiten je Funktionsbereich |
 | `src/styles/` | Farbthemen und Grundgestaltung |
 | `supabase/` | Datenbankschema (Migrationen), Edge Function `notify` |
-| `docs/` | Roadmap, rechtliche Checkliste, Testplan, Push-Einrichtung |
+| `docs/` | Roadmap, rechtliche Checkliste, Testplan, Push-Einrichtung, Katalog-Import |
+| `scripts/import_osm.py` | Import aus OpenStreetMap (läuft monatlich als GitHub-Workflow) |
 | `supabase/tests/` | Prüfskripte für Zugriffsregeln und Push |

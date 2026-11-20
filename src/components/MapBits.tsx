@@ -90,3 +90,26 @@ export function useFit() {
   const map = useMap();
   return (points: [number, number][]) => map.fitBounds(L.latLngBounds(points), { padding: [60, 60], paddingTopLeft: [40, 120], maxZoom: 17 });
 }
+
+const catalogCache = new Map<string, L.DivIcon>();
+/** Unbesuchte Location aus dem Katalog: kleiner grauer Pin mit Symbol der Art */
+export function catalogIcon(emoji: string): L.DivIcon {
+  if (catalogCache.has(emoji)) return catalogCache.get(emoji)!;
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="pin cat"><b>${emoji}</b></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [3, 28],
+    popupAnchor: [11, -24]
+  });
+  catalogCache.set(emoji, icon);
+  return icon;
+}
+
+/** Meldet Kartenausschnitt und Zoomstufe nach jeder Bewegung */
+export function BoundsWatcher({ onChange }: { onChange: (b: L.LatLngBounds, zoom: number) => void }) {
+  const map = useMapEvents({ moveend: () => onChange(map.getBounds(), map.getZoom()) });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => onChange(map.getBounds(), map.getZoom()), []);
+  return null;
+}

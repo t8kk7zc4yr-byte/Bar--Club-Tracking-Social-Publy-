@@ -19,8 +19,9 @@ export function RatingBadge({ value, size }: { value: number | null | undefined;
   );
 }
 
-export function RatingLegend() {
+export function RatingLegend({ note = false }: { note?: boolean }) {
   return (
+    <>
     <div className="legend">
       {(['bad', 'ok', 'good', 'top'] as const).map((k) => (
         <span key={k}>
@@ -34,6 +35,8 @@ export function RatingLegend() {
         </span>
       ))}
     </div>
+    {note && <div className="small muted mt8">Alle Bewertungen sind persönliche Einschätzungen von dir bzw. deinen Freunden, keine Bewertung durch Social Publy.</div>}
+    </>
   );
 }
 

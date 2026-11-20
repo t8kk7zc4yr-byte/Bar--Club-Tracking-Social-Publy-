@@ -17,6 +17,7 @@ export interface Place {
 
 type Pos = { lat: number; lng: number };
 
+/** Zuordnung zu den Kategorien der App. Bei Änderungen auch scripts/import_osm.py (category_for) anpassen. */
 function categoryFor(tags: Record<string, string | undefined>, name = ''): CategoryId {
   const a = tags.amenity ?? '';
   if (/irish/i.test(name) || tags.cuisine === 'irish') return 'irish_pub';
@@ -159,7 +160,8 @@ export async function catalogNearby(pos: Pos, deg = 0.006): Promise<Venue[]> {
     .select('*')
     .gte('lat', pos.lat - deg).lte('lat', pos.lat + deg)
     .gte('lng', pos.lng - deg * 1.6).lte('lng', pos.lng + deg * 1.6)
-    .limit(60);
+    .eq('active', true)
+    .limit(80);
   if (error) return [];
   return (data ?? []).map(venueFromRow);
 }
@@ -168,7 +170,28 @@ export async function catalogNearby(pos: Pos, deg = 0.006): Promise<Venue[]> {
 export async function catalogSearch(q: string): Promise<Venue[]> {
   const term = q.replace(/[%_,()]/g, ' ').trim();
   if (term.length < 2) return [];
-  const { data, error } = await supabase.from('venues').select('*').ilike('name', `%${term}%`).limit(20);
+  const { data, error } = await supabase.from('venues').select('*').ilike('name', `%${term}%`).eq('active', true).limit(25);
   if (error) return [];
   return (data ?? []).map(venueFromRow);
+}
+
+export interface Box {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+
+/** Alle sichtbaren Katalogeinträge im Kartenausschnitt (aus OpenStreetMap importiert oder von Freunden angelegt) */
+export async function catalogInBox(b: Box, limit = 400): Promise<{ venues: Venue[]; capped: boolean }> {
+  const { data, error } = await supabase
+    .from('venues')
+    .select('*')
+    .gte('lat', b.south).lte('lat', b.north)
+    .gte('lng', b.west).lte('lng', b.east)
+    .eq('active', true)
+    .limit(limit + 1);
+  if (error) throw new Error(error.message);
+  const venues = (data ?? []).map(venueFromRow);
+  return { venues: venues.slice(0, limit), capped: venues.length > limit };
 }

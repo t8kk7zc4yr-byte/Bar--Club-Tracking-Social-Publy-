@@ -327,3 +327,5 @@ button.link { background: none; border: 0; padding: 0; color: var(--accent); fon
 .story-strip img { flex: none; width: 62%; max-width: 260px; aspect-ratio: 9 / 16; border-radius: 16px; scroll-snap-align: start; border: 1px solid var(--line); }
 .legal-body ul { padding-left: 20px; margin: 6px 0 10px; }
 .legal-body .ph { display: inline; }
+.pin.cat { width: 28px; height: 28px; background: var(--card-2); border: 2px solid var(--dim); box-shadow: 0 3px 8px #0006; opacity: 0.92; }
+.pin.cat b { font-size: 13px; font-weight: 400; }
