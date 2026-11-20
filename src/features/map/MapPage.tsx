@@ -15,7 +15,7 @@ type Filter = 'all' | 'fav' | 'wish' | 'sport' | CategoryId;
 type Located = VenueView & { lat: number; lng: number };
 
 /** Ab dieser Zoomstufe zeigt die Karte alle Bars und Clubs im Ausschnitt */
-const CATALOG_ZOOM = 13;
+const CATALOG_ZOOM = 12;
 
 /** Einfaches Pixel-Clustering: Locations, die beim aktuellen Zoom weniger als 56 px auseinander liegen, werden zusammengefasst */
 function Clusters({ venues, zoom, renderPin }: { venues: Located[]; zoom: number; renderPin: (v: Located) => ReactNode }) {

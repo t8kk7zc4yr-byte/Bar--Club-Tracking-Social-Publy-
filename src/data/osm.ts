@@ -183,7 +183,7 @@ export interface Box {
 }
 
 /** Alle sichtbaren Katalogeinträge im Kartenausschnitt (aus OpenStreetMap importiert oder von Freunden angelegt) */
-export async function catalogInBox(b: Box, limit = 400): Promise<{ venues: Venue[]; capped: boolean }> {
+export async function catalogInBox(b: Box, limit = 600): Promise<{ venues: Venue[]; capped: boolean }> {
   const { data, error } = await supabase
     .from('venues')
     .select('*')
